@@ -1,0 +1,92 @@
+[
+  {
+    "file": "common-lang-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/common/common-lang/3.12.0/common-lang-3.12.0-sources.jar",
+    "sha256": "1bc50f217e309c9a394cdcda17605381733cfd9dcd76faaf85e63e5bffb9fa9c",
+    "size": 134869
+  },
+  {
+    "file": "common-io-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/common/common-io/3.12.0/common-io-3.12.0-sources.jar",
+    "sha256": "055c7cea21727e848f3dd86891c13e5f8d4f5d80a8b99a1aa67d0e3b6cecff92",
+    "size": 126830
+  },
+  {
+    "file": "common-image-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/common/common-image/3.12.0/common-image-3.12.0-sources.jar",
+    "sha256": "932c6fc890875123db9c34afe611ec2f308310481c309d51e98de667212ca27a",
+    "size": 95462
+  },
+  {
+    "file": "imageio-core-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/imageio/imageio-core/3.12.0/imageio-core-3.12.0-sources.jar",
+    "sha256": "cf3ccb8479579def45e8bf19e93b3fd22cee27c05c321fecca5d8dc9f6fee801",
+    "size": 117783
+  },
+  {
+    "file": "imageio-webp-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/imageio/imageio-webp/3.12.0/imageio-webp-3.12.0-sources.jar",
+    "sha256": "d5138bec117528168c9b9bd95ffb27a39ae2a42381a79ecce4d6495f5188c720",
+    "size": 86705
+  },
+  {
+    "file": "imageio-metadata-3.12.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/twelvemonkeys/imageio/imageio-metadata/3.12.0/imageio-metadata-3.12.0-sources.jar",
+    "sha256": "45fc5b87993425a50381db0f320e1d3511bcda6b19478d3335c253e0d93918e9",
+    "size": 97734
+  },
+  {
+    "file": "annotations-26.0.2-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/26.0.2/annotations-26.0.2-sources.jar",
+    "sha256": "a3bea3ada0af186437f8f3a089e6b0f52ac5aa068c1cb829058fb8a5069f6b0f",
+    "size": 39586
+  },
+  {
+    "file": "mixinextras-forge-0.5.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/io/github/llamalad7/mixinextras-forge/0.5.0/mixinextras-forge-0.5.0-sources.jar",
+    "sha256": "a3e450a0ad2908faf75cec52b770f600689a7d3f2499a2a9f899f05dc8e30288",
+    "size": 2139
+  },
+  {
+    "file": "mixinextras-common-0.5.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/io/github/llamalad7/mixinextras-common/0.5.0/mixinextras-common-0.5.0-sources.jar",
+    "sha256": "eec4ee662a2df133c4acc761a364bf19c3fe955e4341e465f524936e24ab41eb",
+    "size": 217610
+  },
+  {
+    "file": "json-0.2.1-sources.jar",
+    "url": "https://maven.quiltmc.org/repository/release/org/quiltmc/parsers/json/0.2.1/json-0.2.1-sources.jar",
+    "sha256": "4205628e70f1667b506266dc13342c4a152dbfeee9e987793602bb14ac89e756",
+    "size": 24754
+  },
+  {
+    "file": "gson-0.2.1-sources.jar",
+    "url": "https://maven.quiltmc.org/repository/release/org/quiltmc/parsers/gson/0.2.1/gson-0.2.1-sources.jar",
+    "sha256": "6a8508c0754e14d178da5ca897472e40ed45c815cb142701a96113ce07ec3027",
+    "size": 3040
+  },
+  {
+    "file": "commons-lang3-3.3.2-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.3.2/commons-lang3-3.3.2-sources.jar",
+    "sha256": "e8463a66530c9b119f65ce1b9632e7a561a56d6693d2fe5d682cfb074f415bbb",
+    "size": 470961
+  },
+  {
+    "file": "antlr4-runtime-4.13.1-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/antlr/antlr4-runtime/4.13.1/antlr4-runtime-4.13.1-sources.jar",
+    "sha256": "0239ef67bc775e654b2f447f3819d3366fb245ddfc623b8b6fd534907472d178",
+    "size": 314203
+  },
+  {
+    "file": "gson-2.11.0-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0-sources.jar",
+    "sha256": "49a853f71bc874ee1898a4ad5009b57d0c536e5a998b3890253ffbf4b7276ad3",
+    "size": 203808
+  },
+  {
+    "file": "java-semver-0.10.2-sources.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/github/zafarkhaja/java-semver/0.10.2/java-semver-0.10.2-sources.jar",
+    "sha256": "b1564df288eead4915307e30039eb42ddc1ac036b13e9324857eed0f02e423ff",
+    "size": 50833
+  }
+]

@@ -1,460 +1,265 @@
+import groovy.json.JsonSlurper
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import java.security.MessageDigest
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("dev.kikugie.stonecutter")
-    id("dev.isxander.modstitch.base")
-
-    kotlin("jvm")
-
-    id("me.modmuss50.mod-publish-plugin")
+    `java-library`
     `maven-publish`
-    signing
-    id("dev.isxander.secrets")
-
-    id("org.ajoberstar.grgit")
+    kotlin("jvm")
+    id("dev.kikugie.stonecutter")
+    id("net.minecraftforge.gradle")
+    id("net.minecraftforge.jarjar")
 }
 
-// version stuff
-val mcVersion = property("mcVersion")!!.toString()
-val mcSemverVersion = stonecutter.current.version
-val versionWithoutMC = property("modVersion")!!.toString()
-
-val isAlpha = "alpha" in versionWithoutMC
-val isBeta = "beta" in versionWithoutMC
-
-// loader stuff
-val isFabric = modstitch.isLoom
-val isNeoforge = modstitch.isModDevGradleRegular
-val isForge = modstitch.isModDevGradleLegacy
-val isForgeLike = modstitch.isModDevGradle
-val loader = when {
-    isFabric -> "fabric"
-    isNeoforge -> "neoforge"
-    isForge -> "forge"
-    else -> error("Unknown loader")
+val mcVersion = property("mcVersion").toString()
+val releaseMinecraft = findProperty("artifact.minecraft") ?: mcVersion
+val releaseVersion = "${property("modVersion")}+$releaseMinecraft"
+version = releaseVersion
+group = "dev.svyaton"
+base.archivesName = "yacl-reforged"
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    withSourcesJar()
 }
-
-val snapshotVer = "${grgit.branch.current().name.replace('/', '.')}-SNAPSHOT"
-if (System.getenv().containsKey("GITHUB_ACTIONS")) {
-    version = "$version+$snapshotVer"
-}
-
-val testmod by sourceSets.registering {
-    compileClasspath += sourceSets.main.get().compileClasspath
-    runtimeClasspath += sourceSets.main.get().runtimeClasspath
-}
-
-modstitch {
-    minecraftVersion = mcVersion
-
-    parchment {
-        prop("parchment.version") { mappingsVersion = it }
-        prop("parchment.minecraft") { minecraftVersion = it }
-    }
-
-    metadata {
-        fun prop(property: String, block: (String) -> Unit) {
-            prop(property, ifNull = {""}) { block(it) }
-        }
-
-        prop("modId") { modId = it }
-        prop("modName") { modName = it }
-        modVersion = if (System.getenv().containsKey("GITHUB_ACTIONS")) {
-            "$versionWithoutMC+$snapshotVer"
-        } else {
-            "$versionWithoutMC+${stonecutter.current.project}"
-        }
-        modGroup = "dev.isxander"
-        prop("modDescription") { modDescription = it }
-        modLicense = "LGPL-3.0-or-later"
-        modAuthor = "isXander"
-
-        prop("githubProject") { replacementProperties.put("github", it) }
-        prop("meta.mcDep") { replacementProperties.put("mc", it) }
-        prop("meta.loaderDep") { replacementProperties.put("loaderVersion", it) }
-        prop("deps.fabricApi") { replacementProperties.put("fapi", it) }
-    }
-
-    loom {
-        prop("deps.fabricLoader", required = true) { fabricLoaderVersion = it }
-
-        configureLoom {
-            runConfigs.configureEach {
-                ideConfigGenerated(false)
-            }
-            runs {
-                register("testmodClient") {
-                    client()
-                    name = "Testmod Client"
-                    source(testmod.name)
-                    ideConfigGenerated(true)
-                    runDir("../../run")
-                }
-            }
-        }
-    }
-
-    moddevgradle {
-        prop("deps.neoforge") { neoForgeVersion = it }
-        prop("deps.forge") { forgeVersion = it }
-
-        configureNeoForge {
-            runs {
-                register("testmodClient") {
-                    client()
-                    sourceSet = testmod
-                    gameDirectory = layout.projectDirectory.dir("../../run")
-                }
-            }
-
-            mods {
-                register("testmod") {
-                    sourceSet(testmod.get())
-                }
-                register("main") {
-                    sourceSet(sourceSets.main.get())
-                }
-            }
-        }
-    }
-
-    mixin {
-        addMixinsToModManifest = true
-
-        configs.register("yacl")
-        if (isFabric) configs.register("yacl-fabric")
-    }
-
-    createProxyConfigurations(testmod.get())
-}
-
 stonecutter {
     constants {
-        put("fabric", modstitch.isLoom)
-        put("neoforge", modstitch.isModDevGradleRegular)
-        put("forge", modstitch.isModDevGradleLegacy)
-        put("forgelike", modstitch.isModDevGradle)
+        put("fabric", false)
+        put("neoforge", false)
+        put("forge", true)
+        put("forgelike", true)
+        put("controlify", false)
+        put("mod-menu", false)
     }
-
-    dependencies {
-        put("fapi", (findProperty("deps.fabricApi")?.toString() ?: "0.0.0"))
+}
+val localQa = rootProject.file(".tools/qa/modern")
+val testmod = sourceSets.create("testmod") {
+    if (localQa.exists()) {
+        java.srcDir(localQa.resolve("java"))
+        resources.srcDir(localQa.resolve("resources"))
     }
-
-    replacements {
-        string {
-            direction = eval(current.version, ">=1.21.11")
-            replace("ResourceLocation", "Identifier")
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+}
+val qaModJar = tasks.register<Jar>("qaModJar") {
+    archiveClassifier = "testmod"
+    from(testmod.output)
+    manifest.attributes("MixinConfigs" to if (localQa.exists()) "yacl-test.mixins.json,yacl-server-test.mixins.json" else "yacl-test.mixins.json")
+}
+minecraft {
+    accessTransformers.from(rootProject.file("src/main/resources/META-INF/accesstransformer.cfg"))
+    runs {
+        configureEach {
+            workingDir = layout.projectDirectory.dir("run")
+            systemProperty("eventbus.api.strictRuntimeChecks", "true")
+            if (providers.gradleProperty("qaKff").orNull == "true") systemProperty("yacl.reforged.qa.kff", "true")
+            systemProperty("yacl.reforged.qa.kffId", providers.gradleProperty("qaKffId").orElse("kotlinforforge").get())
+            systemProperty("yacl.reforged.qa.kotlinVersion", providers.gradleProperty("qaKotlinVersion").orElse("").get())
+            systemProperty("yacl.reforged.qa.extraModId", providers.gradleProperty("qaExtraModId").orElse("").get())
+            systemProperty("yacl.reforged.qa.noKotlin", providers.gradleProperty("qaNoKotlin").orElse("false").get())
+            if (providers.gradleProperty("qaKffProbe").orNull == "true") systemProperty("yacl.reforged.qa.kffProbe", "true")
         }
-        string {
-            direction = eval(current.version, ">=1.21.11")
-            replace("import net.minecraft.Util;", "import net.minecraft.util.Util;")
+        register("client") {
+            if (providers.gradleProperty("qa").orNull == "true") {
+                args("--mixin.config=yacl-test.mixins.json")
+                systemProperty("yacl.reforged.qa", "true")
+            }
+            with(testmod) {
+                args("--mixin.config=yacl.mixins.json", "--mixin.config=yacl-test.mixins.json")
+            }
+        }
+        register("server") {
+            args("--nogui")
+            if (providers.gradleProperty("qaServer").orNull == "true") {
+                args("--mixin.config=yacl-server-test.mixins.json")
+                systemProperty("yacl.reforged.qa.server", "true")
+            }
         }
     }
 }
-
 repositories {
-    maven("https://prmaven.neoforged.net/NeoForge/pr3198") {
-        content {
-            includeModule("net.neoforged", "neoforge")
-        }
+    minecraft.mavenizer(this)
+    maven(fg.forgeMaven)
+    maven(fg.minecraftLibsMaven)
+    exclusiveContent {
+        forRepository { maven("https://maven.quiltmc.org/repository/release") }
+        filter { includeGroupAndSubgroups("org.quiltmc") }
     }
+    mavenCentral()
 }
-
-// MDG 2.0.137 (via Modstitch 0.8.4) defaults to NFRT 2.0.18, which cannot build 26.3 see [neoforged/NeoForge#3490](https://github.com/neoforged/NeoForge/issues/3490)
-// Remove once Modstitch updates to MDG 2.0.138 or later, which defaults to NFRT 2.0.31
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "net.neoforged" && requested.name == "neoform-runtime") {
-            useVersion("2.0.31")
-        }
-    }
+jarJar.register { archiveClassifier = "" }
+val bundledRuntime = configurations.create("bundledRuntime") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    extendsFrom(configurations.getByName("jarJar"))
 }
-
 dependencies {
-    fun Dependency?.jij() = this?.also(::modstitchJiJ)
-
-    prop("deps.mixinExtras") {
-        when {
-            isFabric -> modstitchImplementation("io.github.llamalad7:mixinextras-fabric:$it").jij()
-            isNeoforge -> implementation("io.github.llamalad7:mixinextras-neoforge:$it").jij()
-            isForge -> {
-                compileOnly("io.github.llamalad7:mixinextras-common:$it")
-                implementation("io.github.llamalad7:mixinextras-forge:$it").jij()
-            }
-            else -> error("Unknown loader")
+    implementation(minecraft.dependency("net.minecraftforge:forge:$mcVersion-${if (providers.gradleProperty("qaForgeTarget").orNull == project.name) providers.gradleProperty("qaForgeVersion").get() else property("deps.forge")}"))
+    val bundled = listOf(
+        "org.jetbrains:annotations:26.0.2",
+        "com.twelvemonkeys.imageio:imageio-core:${property("deps.imageio")}",
+        "com.twelvemonkeys.imageio:imageio-webp:${property("deps.imageio")}",
+        "com.twelvemonkeys.imageio:imageio-metadata:${property("deps.imageio")}",
+        "com.twelvemonkeys.common:common-lang:${property("deps.imageio")}",
+        "com.twelvemonkeys.common:common-io:${property("deps.imageio")}",
+        "com.twelvemonkeys.common:common-image:${property("deps.imageio")}",
+        "org.quiltmc.parsers:json:${property("deps.quiltParsers")}",
+        "org.quiltmc.parsers:gson:${property("deps.quiltParsers")}",
+        "org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
+        "org.jetbrains.kotlin:kotlin-reflect:2.3.0"
+    )
+    bundled.forEach {
+        if (it.startsWith("org.jetbrains.kotlin:")) {
+            compileOnlyApi(it)
+        } else {
+            api(it)
+            "jarJar"(it)
         }
-    }
-
-    fun modDependency(
-        id: String,
-        artifactGetter: (String) -> Any,
-        requiredByDependants: Boolean = false,
-        supportsRuntime: Boolean = true,
-        extra: (runtime: Boolean) -> Unit = {}
-    ) {
-        prop("deps.$id") { modVersion ->
-            val noRuntime = prop("deps.$id.noRuntime") { it.toBoolean() } == true
-            require(noRuntime || supportsRuntime) { "No runtime is not supported for $id" }
-
-            val configuration = if (requiredByDependants) {
-                if (noRuntime) "modstitchModCompileOnlyApi" else "modstitchModApi"
-            } else {
-                if (noRuntime) "modstitchModCompileOnly" else "modstitchModImplementation"
-            }
-
-            configuration(artifactGetter(modVersion))
-
-            extra(!noRuntime)
-        }
-    }
-
-    if (isFabric) {
-        modDependency("fabricApi", { platform("net.fabricmc.fabric-api:fabric-api-bom:$it") }, requiredByDependants = true) { runtime ->
-            modstitchModApi("net.fabricmc.fabric-api:fabric-resource-loader-v1")
-        }
-
-        modDependency("fabricLangKotlin", { "net.fabricmc:fabric-language-kotlin:${it}" })
-    }
-    if (isNeoforge) {
-        //modstitchModRuntimeOnly("thedarkcolour:kotlinforforge-neoforge:${findProperty("deps.kotlinForForge")}")
-    }
-
-    listOf(
-        "imageio:imageio-core",
-        "imageio:imageio-webp",
-        "imageio:imageio-metadata",
-        "common:common-lang",
-        "common:common-io",
-        "common:common-image",
-    ).forEach {
-        modstitchApi("com.twelvemonkeys.$it:${findProperty("deps.imageio")}")
-            .jij()
-    }
-
-    listOf(
-        "json",
-        "gson"
-    ).forEach {
-        modstitchApi("org.quiltmc.parsers:$it:${findProperty("deps.quiltParsers")}")
-            .jij()
-    }
-
-    "testmodImplementation"(sourceSets.main.get().output)
-}
-
-val releaseModVersion by tasks.registering {
-    group = "yacl/versioned"
-
-    dependsOn("publishMods")
-
-    if (!project.publishMods.dryRun.get()) {
-        dependsOn("publishModPublicationToXanderReleasesRepository")
     }
 }
-createActiveTask(releaseModVersion)
-
-val finalJarTasks = listOf(
-    modstitch.finalJarTask
+val metadata = mapOf(
+    "mod_id" to property("modId"), "mod_version" to releaseVersion,
+    "mod_name" to property("modName"), "mod_author" to property("modAuthors"),
+    "mod_description" to property("modDescription"), "mod_license" to "LGPL-3.0-or-later",
+    "mc" to property("meta.mcDep"),
+    "loaderVersion" to property("meta.loaderDep"),
+    "forgeVersion" to property("meta.forgeDep"),
 )
-val buildAndCollect by tasks.registering(Copy::class) {
-    group = "yacl/versioned"
-
-    finalJarTasks.forEach { jar ->
-        dependsOn(jar)
-        from(jar.flatMap { it.archiveFile })
-    }
-
-    into(rootProject.layout.buildDirectory.dir("finalJars"))
+tasks.processResources {
+    inputs.properties(metadata)
+    inputs.property("resourcePackName", metadata.getValue("mod_name"))
+    from(rootProject.file("src/main/templates/META-INF/mods.toml")) { into("META-INF"); expand(metadata) }
+    filesMatching("pack.mcmeta") { expand(mapOf("name" to metadata.getValue("mod_name"))) }
+    exclude("yacl-fabric.mixins.json")
 }
-createActiveTask(buildAndCollect)
+val qaKffId = providers.gradleProperty("qaKffId").orElse("kotlinforforge").get()
+val qaKffDependency = if (providers.gradleProperty("qaKff").orNull == "true") """
+[[dependencies.yacl_test]]
+modId = "$qaKffId"
+mandatory = true
+type = "required"
+versionRange = "${if (qaKffId in setOf("kotlinreforged", "kotlin_reforged")) "[7,8)" else "[0,)"}"
+ordering = "AFTER"
+side = "BOTH"
+""".trimIndent() else ""
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
-tasks.javadoc {
-    isFailOnError = false
-}
-
-publishMods {
-    dryRun.set(false)
-
-    displayName.set("$versionWithoutMC for $loader $mcVersion")
-
-    file = modstitch.finalJarTask.flatMap { it.archiveFile }
-
-    fun versionList(prop: String) = findProperty(prop)?.toString()
-        ?.split(',')
-        ?.map { it.trim() }
-        ?: emptyList()
-
-    // modrinth and curseforge use different formats for snapshots. this can be expressed globally
-    val stableMCVersions = versionList("pub.stableMC")
-
-    changelog = rootProject.file("changelog.md").readText()
-    type = when {
-        isAlpha -> ALPHA
-        isBeta -> BETA
-        else -> STABLE
-    }
-
-    modLoaders.add(loader)
-
-    modrinth {
-        projectId = providers.gradleProperty("pub.modrinthId")
-        accessToken = secrets.gradleProperty("modrinth.accessToken")
-
-        minecraftVersions.addAll(stableMCVersions)
-        minecraftVersions.addAll(versionList("pub.modrinthMC"))
-
-        announcementTitle = "Download $mcVersion for ${loader.replaceFirstChar { it.uppercase() }} from Modrinth"
-
-        if (isFabric) {
-            requires { slug.set("fabric-api") }
-        }
-    }
-
-    curseforge {
-        projectId = providers.gradleProperty("pub.curseforgeId")
-        projectSlug = providers.gradleProperty("pub.curseforgeSlug")
-        accessToken = secrets.gradleProperty("curseforge.accessToken")
-
-        minecraftVersions.addAll(stableMCVersions)
-        minecraftVersions.addAll(versionList("pub.curseMC"))
-
-        announcementTitle = "Download $mcVersion for ${loader.replaceFirstChar { it.uppercase() }} from CurseForge"
-
-        clientRequired = true
-        serverRequired = false
-
-        if (isFabric) {
-            requires { slug.set("fabric-api") }
-        }
+tasks.named<ProcessResources>(testmod.processResourcesTaskName) {
+    inputs.property("qaKffDependency", qaKffDependency)
+    exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")
+    from(rootProject.file("src/testmod/templates/META-INF/mods.toml")) { into("META-INF"); expand(mapOf("qaKffDependency" to qaKffDependency)) }
+    if (localQa.exists()) doLast {
+        val resource = destinationDir.resolve("yacl-test.mixins.json")
+        val config = JsonSlurper().parse(resource) as MutableMap<String, Any>
+        val clients = config.getValue("client") as MutableList<String>
+        if ("ReforgedQAMixin" !in clients) clients.add("ReforgedQAMixin")
+        resource.writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(config)))
     }
 }
-publishing {
-    publications {
-        register<MavenPublication>("mod") {
-            from(components["java"])
-
-            groupId = "dev.isxander"
-            artifactId = "yet-another-config-lib"
-            version = modstitch.metadata.modVersion.get()
-
-            pom {
-                name = modstitch.metadata.modName
-                description = modstitch.metadata.modDescription
-                url = "https://www.isxander.dev/projects/yet-another-config-lib"
-                licenses {
-                    license {
-                        name = "LGPL-3.0-or-later"
-                        url = "https://www.gnu.org/licenses/lgpl-3.0.en.html"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "isXander"
-                        name = "Xander"
-                        email = "business@isxander.dev"
-                    }
-                }
-                scm {
-                    url = "https://github.com/isXander/YetAnotherConfigLib"
-                    connection = "scm:git:git//github.com/isXander/YetAnotherConfigLib.git"
-                    developerConnection = "scm:git:ssh://git@github.com/isXander/YetAnotherConfigLib.git"
-                }
-            }
-        }
-    }
-    repositories {
-        mavenLocal()
-
-        maven(url = "https://maven.isxander.dev/releases") {
-            name = "Xander"
-            credentials {
-                username = secrets.gradleProperty("maven.username").orNull
-                password = secrets.gradleProperty("maven.password").orNull
-            }
-        }
-    }
-}
-
-val signingKeyProvider = secrets.gradleProperty("signing.secretKey")
-val signingPasswordProvider = secrets.gradleProperty("signing.password")
-signing {
-    sign(publishing.publications["mod"])
-}
-// not configuration cache friendly, but neither is the whole of signing plugin
-// this plugin does not support lazy configuration of signing keys
-gradle.taskGraph.whenReady {
-    val willSign = allTasks.any { it.name.startsWith("sign") }
-    if (willSign) {
-        signing {
-            val signingKey = signingKeyProvider.orNull
-            val signingPassword = signingPasswordProvider.orNull
-
-            isRequired = signingKey != null && signingPassword != null
-            if (isRequired) {
-                useInMemoryPgpKeys(signingKey, signingPassword)
-            } else {
-                logger.error("Signing keys not found; skipping signing!")
-            }
-        }
-    }
-}
-
-tasks {
-    withType<KotlinCompile> {
-        compilerOptions {
-            jvmTarget = modstitch.javaVersion.map { JvmTarget.fromTarget(it.toString()) }
-        }
-
-        dependsOn("stonecutterGenerate")
-    }
-}
-
-tasks.named("generateModMetadata") {
+tasks.withType<JavaCompile>().configureEach {
     dependsOn("stonecutterGenerate")
+    options.encoding = "UTF-8"
+    options.compilerArgs.add("-proc:none")
 }
-modstitch.moddevgradle {
-    modstitch.onEnable {
-        tasks.named("createMinecraftArtifacts") {
-            dependsOn("stonecutterGenerate")
+tasks.withType<KotlinCompile>().configureEach {
+    dependsOn("stonecutterGenerate")
+    compilerOptions.jvmTarget = JvmTarget.JVM_25
+}
+tasks.jar {
+    archiveClassifier = "slim"
+    manifest.attributes("MixinConfigs" to "yacl.mixins.json")
+    from(rootProject.file("LICENSE")) { into("META-INF") }
+    from(listOf(rootProject.file("src/legal/NOTICE"), rootProject.file("src/legal/MODIFICATIONS.md"), rootProject.file("src/legal/THIRD-PARTY-LICENSES.md"))) { into("META-INF") }
+    from(rootProject.file("src/legal/LICENSES")) { into("META-INF/licenses") }
+}
+tasks.named<Jar>("sourcesJar") {
+    from(rootProject.file("LICENSE")) { into("META-INF") }
+    from(listOf(rootProject.file("src/legal/NOTICE"), rootProject.file("src/legal/MODIFICATIONS.md"), rootProject.file("src/legal/THIRD-PARTY-LICENSES.md"))) { into("META-INF") }
+    from(rootProject.file("src/legal/LICENSES")) { into("META-INF/licenses") }
+}
+val artifactTarget = findProperty("artifact.target")?.toString() ?: project.name
+if (artifactTarget == project.name) {
+    tasks.register<Copy>("buildAndCollect") {
+        dependsOn("jarJar", "sourcesJar")
+        from(tasks.named<Jar>("jarJar").flatMap { it.archiveFile })
+        from(tasks.named<Jar>("sourcesJar").flatMap { it.archiveFile })
+        into(rootProject.layout.buildDirectory.dir("releases"))
+    }
+} else {
+    tasks.register("buildAndCollect") {
+        dependsOn(":$artifactTarget:buildAndCollect")
+    }
+}
+
+publishing {
+    publications.register<MavenPublication>("reforged") {
+        artifactId = "yacl-reforged"
+        artifact(tasks.named("jarJar"))
+        artifact(tasks.named("sourcesJar"))
+        pom {
+            name = property("modName").toString()
+            description = property("modDescription").toString()
+            url = "https://modrinth.com/project/Uwg487V8"
+            scm {
+                url = "https://github.com/SvyatON/YACL-Reforged"
+                connection = "scm:git:https://github.com/SvyatON/YACL-Reforged.git"
+                developerConnection = "scm:git:ssh://git@github.com/SvyatON/YACL-Reforged.git"
+            }
+            issueManagement { system = "GitHub"; url = "https://github.com/SvyatON/YACL-Reforged/issues" }
+            licenses { license { name = "LGPL-3.0-or-later"; url = "https://www.gnu.org/licenses/lgpl-3.0.en.html" } }
+            developers {
+                developer { id = "isXander"; name = "isXander" }
+                developer { id = "SvyatON"; name = "SvyatON" }
+            }
         }
     }
 }
 
-fun <T> prop(property: String, required: Boolean = false, ifNull: () -> String? = { null }, block: (String) -> T?): T? {
-    return ((System.getenv(property) ?: findProperty(property)?.toString())
-        ?.takeUnless { it.isBlank() }
-        ?: ifNull())
-        .let { if (required && it == null) error("Property $property is required") else it }
-        ?.let(block)
-}
-
-fun createActiveTask(
-    taskProvider: TaskProvider<*>? = null,
-    taskName: String? = null,
-    internal: Boolean = false
-): String {
-    val taskExists = taskProvider != null || taskName!! in tasks.names
-    val task = taskProvider ?: taskName?.takeIf { taskExists }?.let { tasks.named(it) }
-    val taskName = when {
-        taskProvider != null -> taskProvider.name
-        taskName != null -> taskName
-        else -> error("Either taskProvider or taskName must be provided")
-    }
-    val activeTaskName = "${taskName}Active"
-
-    if (stonecutter.current.isActive) {
-        rootProject.tasks.register(activeTaskName) {
-            group = "yacl${if (internal) "/versioned" else ""}"
-
-            task?.let { dependsOn(it) }
+if (providers.gradleProperty("qa").orNull == "true" || providers.gradleProperty("qaServer").orNull == "true" || providers.gradleProperty("packaged").orNull == "true") {
+    afterEvaluate {
+        for (runName in listOf("runClient", "runServer")) {
+            val serverQA = runName == "runServer"
+            val automaticQA = providers.gradleProperty(if (serverQA) "qaServer" else "qa").orNull == "true"
+            if (!automaticQA && (serverQA || providers.gradleProperty("packaged").orNull != "true")) continue
+            val resultName = if (serverQA) "qa-server-result.txt" else "qa-result.txt"
+            val checksumName = if (serverQA) "qa-server-artifact.sha256" else "qa-artifact.sha256"
+            tasks.named<JavaExec>(runName) {
+                dependsOn("jarJar", qaModJar)
+                val artifactTarget = findProperty("artifact.target")?.toString() ?: project.name
+                if (artifactTarget != project.name && !providers.gradleProperty("qaJar").isPresent) dependsOn("buildAndCollect")
+                if (automaticQA) doFirst {
+                    val runDirectory = layout.projectDirectory.dir("run").asFile
+                    runDirectory.resolve(resultName).delete()
+                    runDirectory.resolve(checksumName).delete()
+                    val configFile = runDirectory.resolve("config/yacl.json5")
+                    configFile.parentFile.mkdirs()
+                    val previous = if (configFile.exists()) configFile.readText() else "{showColorPickerIndicator: true}"
+                    val key = Regex("preloadComplexImageFormats\\s*:\\s*(true|false)")
+                    configFile.writeText(if (key.containsMatchIn(previous)) key.replace(previous, "preloadComplexImageFormats: true") else previous.replaceFirst("{", "{preloadComplexImageFormats: true,"))
+                    val options = runDirectory.resolve("options.txt")
+                    val settings = if (options.exists()) options.readText() else ""
+                    options.writeText(settings.replace(Regex("(?m)^onboardAccessibility:.*$"), "onboardAccessibility:false").let { if (it.contains("onboardAccessibility:")) it else it + "\nonboardAccessibility:false\n" })
+                }
+                val ownJar = if (artifactTarget == project.name) tasks.named<Jar>("jarJar").flatMap { it.archiveFile } else rootProject.layout.buildDirectory.file("releases/yacl-reforged-$releaseVersion.jar")
+                val overrideJar = providers.gradleProperty("qaJar")
+                val actualJar = if (overrideJar.isPresent) layout.file(overrideJar.map { rootProject.file(it) }) else ownJar
+                if (automaticQA) doLast {
+                    val runDirectory = layout.projectDirectory.dir("run").asFile
+                    val result = runDirectory.resolve(resultName)
+                    check(result.exists() && result.readLines().firstOrNull() == "PASS") { "Packaged QA failed: ${if (result.exists()) result.readText() else "missing result"}" }
+                    val digest = MessageDigest.getInstance("SHA-256").digest(actualJar.get().asFile.readBytes()).joinToString("") { "%02x".format(it) }
+                    runDirectory.resolve(checksumName).writeText(digest)
+                }
+                val embeddedLibraries = bundledRuntime.resolvedConfiguration.firstLevelModuleDependencies.flatMap { it.moduleArtifacts }.map { it.file }.toSet()
+                classpath = files(classpath.filter { it !in sourceSets.main.get().output.files && it !in testmod.output.files && it !in embeddedLibraries && !it.name.startsWith("kotlin-stdlib-") && !it.name.startsWith("kotlin-reflect-") }, qaModJar.flatMap { it.archiveFile }, actualJar)
+                val actualRuntime = javaClass.getMethod("getRuntimeClasspath").apply { isAccessible = true }.invoke(this) as ConfigurableFileCollection
+                actualRuntime.setFrom(testmod.runtimeClasspath.filter { it !in sourceSets.main.get().output.files && it !in testmod.output.files && it !in embeddedLibraries && !it.name.startsWith("kotlin-stdlib-") && !it.name.startsWith("kotlin-reflect-") }, qaModJar.flatMap { it.archiveFile }, actualJar)
+            }
         }
     }
+}
 
-    return activeTaskName
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
 }

@@ -1,59 +1,11 @@
 plugins {
-    kotlin("jvm") version "2.3.0" apply false
-
     id("dev.kikugie.stonecutter")
-
-    val modstitchVersion = "0.8.4"
-    id("dev.isxander.modstitch.base") version modstitchVersion apply false
-    id("net.fabricmc.fabric-loom") version "1.18-SNAPSHOT" apply false
-    id("net.neoforged.moddev") version "2.0.147" apply false
-
-    id("me.modmuss50.mod-publish-plugin") version "0.8.4" apply false
-    id("org.ajoberstar.grgit") version "5.0.+" apply false
-
-    id("dev.isxander.secrets") version "0.1.0"
+    kotlin("jvm") version "2.3.0" apply false
+    id("net.minecraftforge.gradle") version "7.0.29" apply false
+    id("net.minecraftforge.jarjar") version "0.2.3" apply false
 }
 stonecutter active file("versions/current")
-
-allprojects {
-    repositories {
-        exclusiveContent {
-            forRepository { maven("https://maven.terraformersmc.com") }
-            filter { includeGroup("com.terraformersmc") }
-        }
-        exclusiveContent {
-            forRepositories(
-                maven("https://maven.isxander.dev/releases"),
-                maven("https://maven.isxander.dev/snapshots"),
-            )
-            filter { includeGroup("dev.isxander") }
-        }
-        exclusiveContent {
-            forRepository { maven("https://maven.quiltmc.org/repository/release") }
-            filter { includeGroupAndSubgroups("org.quiltmc") }
-        }
-        exclusiveContent {
-            forRepository { maven("https://thedarkcolour.github.io/KotlinForForge/") }
-            filter { includeGroup("thedarkcolour") }
-        }
-        mavenCentral()
-    }
-}
-
-stonecutter {
-    parameters {
-        constants {
-            fun String.propDefined() = project(node.metadata.project).findProperty(this)?.toString()?.isNotBlank() ?: false
-
-            put("controlify", "deps.controlify".propDefined())
-            put("mod-menu", "deps.modMenu".propDefined())
-        }
-    }
-}
-
-version = property("modVersion") as String
-
-tasks.register("clean") {
+tasks.register("buildReleases") {
     group = "build"
-    delete(layout.buildDirectory.dir("finalJars"))
+    dependsOn(subprojects.map { "${it.path}:buildAndCollect" })
 }

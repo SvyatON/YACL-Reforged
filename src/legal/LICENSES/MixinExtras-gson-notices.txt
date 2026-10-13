@@ -1,0 +1,336 @@
+gson-2.11.0-sources.jar — com/google/gson/ExclusionStrategy.java
+gson-2.11.0-sources.jar — com/google/gson/FieldNamingPolicy.java
+gson-2.11.0-sources.jar — com/google/gson/FieldNamingStrategy.java
+gson-2.11.0-sources.jar — com/google/gson/Gson.java
+gson-2.11.0-sources.jar — com/google/gson/GsonBuilder.java
+gson-2.11.0-sources.jar — com/google/gson/InstanceCreator.java
+gson-2.11.0-sources.jar — com/google/gson/JsonArray.java
+gson-2.11.0-sources.jar — com/google/gson/JsonDeserializationContext.java
+gson-2.11.0-sources.jar — com/google/gson/JsonDeserializer.java
+gson-2.11.0-sources.jar — com/google/gson/JsonElement.java
+gson-2.11.0-sources.jar — com/google/gson/JsonIOException.java
+gson-2.11.0-sources.jar — com/google/gson/JsonNull.java
+gson-2.11.0-sources.jar — com/google/gson/JsonObject.java
+gson-2.11.0-sources.jar — com/google/gson/JsonParseException.java
+gson-2.11.0-sources.jar — com/google/gson/JsonPrimitive.java
+gson-2.11.0-sources.jar — com/google/gson/JsonSerializationContext.java
+gson-2.11.0-sources.jar — com/google/gson/JsonSerializer.java
+gson-2.11.0-sources.jar — com/google/gson/annotations/Expose.java
+gson-2.11.0-sources.jar — com/google/gson/annotations/SerializedName.java
+gson-2.11.0-sources.jar — com/google/gson/annotations/Since.java
+gson-2.11.0-sources.jar — com/google/gson/annotations/Until.java
+gson-2.11.0-sources.jar — com/google/gson/annotations/package-info.java
+gson-2.11.0-sources.jar — com/google/gson/internal/$Gson$Preconditions.java
+gson-2.11.0-sources.jar — com/google/gson/internal/$Gson$Types.java
+gson-2.11.0-sources.jar — com/google/gson/internal/Excluder.java
+gson-2.11.0-sources.jar — com/google/gson/internal/ObjectConstructor.java
+gson-2.11.0-sources.jar — com/google/gson/internal/Primitives.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/DefaultDateTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/package-info.java
+gson-2.11.0-sources.jar — com/google/gson/reflect/TypeToken.java
+gson-2.11.0-sources.jar — com/google/gson/reflect/package-info.java
+
+/*
+ * Copyright (C) 2008 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/FieldAttributes.java
+gson-2.11.0-sources.jar — com/google/gson/JsonParser.java
+gson-2.11.0-sources.jar — com/google/gson/JsonStreamParser.java
+gson-2.11.0-sources.jar — com/google/gson/LongSerializationPolicy.java
+
+/*
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/FormattingStyle.java
+gson-2.11.0-sources.jar — com/google/gson/ReflectionAccessFilter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/ReflectionAccessFilterHelper.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/SerializationDelegatingTypeAdapter.java
+
+/*
+ * Copyright (C) 2022 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/JsonSyntaxException.java
+gson-2.11.0-sources.jar — com/google/gson/internal/Streams.java
+
+/*
+ * Copyright (C) 2010 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/ToNumberPolicy.java
+gson-2.11.0-sources.jar — com/google/gson/ToNumberStrategy.java
+gson-2.11.0-sources.jar — com/google/gson/internal/reflect/ReflectionHelper.java
+gson-2.11.0-sources.jar — com/google/gson/stream/package-info.java
+
+/*
+ * Copyright (C) 2021 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/TypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/TypeAdapterFactory.java
+gson-2.11.0-sources.jar — com/google/gson/internal/JsonReaderInternalAccess.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/ArrayTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/CollectionTypeAdapterFactory.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/JsonTreeReader.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/JsonTreeWriter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/MapTypeAdapterFactory.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/ObjectTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/ReflectiveTypeAdapterFactory.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/TypeAdapterRuntimeTypeWrapper.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/TypeAdapters.java
+
+/*
+ * Copyright (C) 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/annotations/JsonAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/JsonAdapterAnnotationTypeAdapterFactory.java
+
+/*
+ * Copyright (C) 2014 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/ConstructorConstructor.java
+gson-2.11.0-sources.jar — com/google/gson/internal/LazilyParsedNumber.java
+gson-2.11.0-sources.jar — com/google/gson/internal/UnsafeAllocator.java
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/TreeTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/package-info.java
+gson-2.11.0-sources.jar — com/google/gson/internal/sql/SqlDateTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/sql/SqlTimeTypeAdapter.java
+
+/*
+ * Copyright (C) 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/JavaVersion.java
+gson-2.11.0-sources.jar — com/google/gson/internal/PreJava9DateFormatProvider.java
+
+/*
+ * Copyright (C) 2017 The Gson authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/LinkedTreeMap.java
+
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2012 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/NonNullElementWrapperList.java
+gson-2.11.0-sources.jar — module-info.java
+
+/*
+ * Copyright (C) 2018 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/NumberTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/sql/SqlTimestampTypeAdapter.java
+gson-2.11.0-sources.jar — com/google/gson/internal/sql/SqlTypesSupport.java
+
+/*
+ * Copyright (C) 2020 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/bind/util/ISO8601Utils.java
+
+/*
+ * Copyright (C) 2015 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/stream/JsonReader.java
+gson-2.11.0-sources.jar — com/google/gson/stream/JsonScope.java
+gson-2.11.0-sources.jar — com/google/gson/stream/JsonToken.java
+gson-2.11.0-sources.jar — com/google/gson/stream/JsonWriter.java
+gson-2.11.0-sources.jar — com/google/gson/stream/MalformedJsonException.java
+
+/*
+ * Copyright (C) 2010 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+gson-2.11.0-sources.jar — com/google/gson/internal/GsonBuildConfig.java
+
+/*
+ * Copyright (C) 2018 The Gson authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */

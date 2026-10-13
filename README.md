@@ -1,84 +1,168 @@
-# YetAnotherConfigLib
+# YACL Reforged
 
-![Enviroment](https://img.shields.io/badge/Enviroment-Client-purple)
-[![Java 17](https://img.shields.io/badge/Language-Java%2017-9B599A.svg?color=orange)](https://www.oracle.com/news/announcement/oracle-releases-java-17-2021-09-14)
-[![Discord](https://img.shields.io/discord/780023008668287017?color=blue&logo=discord&label=Discord)](https://short.isxander.dev/discord)
+<img src="src/main/resources/yacl-reforged-256.png" alt="YACL Reforged" width="128" height="128">
 
-[![Modrinth](https://img.shields.io/modrinth/dt/1eAoo2KR?color=00AF5C&label=downloads&logo=modrinth)](https://modrinth.com/mod/yacl)
-[![CurseForge](https://cf.way2muchnoise.eu/full_667299_downloads.svg)](https://curseforge.com/minecraft/mc-mods/yacl)
+A builder-based configuration library for Minecraft, unofficially ported to modern Forge versions.
 
-[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/isxander)
+[Download on Modrinth](https://modrinth.com/project/Uwg487V8) · [Source code](https://github.com/SvyatON/YACL-Reforged) · [Report a bug](https://github.com/SvyatON/YACL-Reforged/issues)
 
-A mod designed to fit a modder's needs for client-side configuration.
+Original author: **isXander**. Forge port: **SvyatON**.
 
-[![](https://www.bisecthosting.com/partners/custom-banners/08bbd3ff-5c0d-4480-8738-de0f070a04dd.png)](https://bisecthosting.com/xander)
+This unofficial port preserves the original YACL configuration API, `dev.isxander.yacl3` packages and `yet_another_config_lib_v3` resource namespace. Its Forge mod ID is `yacl_reforged`.
 
-## Why does this mod even exist?
+## Features
 
-This mod was made to fill a hole in this area of Fabric modding. The existing main config libraries don't achieve what I want from them:
+- Configuration categories, collapsible groups and custom controllers.
+- Sliders, dropdowns, lists and a full color picker.
+- Rich text descriptions and animated WebP previews.
+- JSON, JSON5 and Codec serialization, automatic configuration screens and Kotlin DSL.
+- Keyboard navigation and the original Minecraft GUI appearance.
 
-- **[Cloth Config API](https://modrinth.com/mod/cloth-config)**: **It's stale.** The developer of cloth has clarified that they are likely not going to add any more features. They don't want to touch it. ([citation](https://user-images.githubusercontent.com/43245524/206530322-3ae46008-5356-468e-9a73-63b859364d4e.png))
-- **[SpruceUI](https://github.com/LambdAurora/SpruceUI)**: **It isn't designed for configuration.** In this essence the design feels cluttered. Further details available in [this issue](https://github.com/isXander/Zoomify/issues/85).
-- **[OwoLib](https://modrinth.com/mod/owo-lib)**: **It's content focused.** It does a lot of other things as well as config, adding to the size.
+## Supported versions
 
-As you can see, there's sadly a drawback with all of them and this is where YetAnotherConfigLib comes in.
+This repository builds Forge releases for Minecraft 1.20.x, 1.21.x and 26.x. Shared JARs cover the Minecraft ranges shown below.
 
-## Why use YACL?
+| Minecraft | Release version | Corresponding source |
+| --- | --- | --- |
+| 26.1-26.1.2 | `3.9.7+26.1-26.1.2` | [F-3.9.7+26.1-26.1.2](https://github.com/SvyatON/YACL-Reforged/tree/F-3.9.7+26.1-26.1.2) |
+| 26.2 | `3.9.7+26.2` | [F-3.9.7+26.2](https://github.com/SvyatON/YACL-Reforged/tree/F-3.9.7+26.2) |
+| 26.3 | `3.9.7+26.3` | [F-3.9.7+26.3](https://github.com/SvyatON/YACL-Reforged/tree/F-3.9.7+26.3) |
+| 1.21-1.21.1 | `3.8.2+1.21-1.21.1` | [F-3.8.2+1.21-1.21.1](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21-1.21.1) |
+| 1.21.9-1.21.10 | `3.8.2+1.21.9-1.21.10` | [F-3.8.2+1.21.9-1.21.10](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.9-1.21.10) |
+| 1.21.11 | `3.8.2+1.21.11` | [F-3.8.2+1.21.11](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.11) |
+| 1.21.3 | `3.8.2+1.21.3` | [F-3.8.2+1.21.3](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.3) |
+| 1.21.4 | `3.8.2+1.21.4` | [F-3.8.2+1.21.4](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.4) |
+| 1.21.5 | `3.8.2+1.21.5` | [F-3.8.2+1.21.5](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.5) |
+| 1.21.6-1.21.8 | `3.8.2+1.21.6-1.21.8` | [F-3.8.2+1.21.6-1.21.8](https://github.com/SvyatON/YACL-Reforged/tree/F-3.8.2+1.21.6-1.21.8) |
+| 1.20-1.20.1 | `3.6.6+1.20-1.20.1` | [F-3.6.6+1.20-1.20.1](https://github.com/SvyatON/YACL-Reforged/tree/F-3.6.6+1.20-1.20.1) |
+| 1.20.2 | `3.6.6+1.20.2` | [F-3.6.6+1.20.2](https://github.com/SvyatON/YACL-Reforged/tree/F-3.6.6+1.20.2) |
+| 1.20.3-1.20.4 | `3.6.6+1.20.3-1.20.4` | [F-3.6.6+1.20.3-1.20.4](https://github.com/SvyatON/YACL-Reforged/tree/F-3.6.6+1.20.3-1.20.4) |
+| 1.20.6 | `3.6.6+1.20.6` | [F-3.6.6+1.20.6](https://github.com/SvyatON/YACL-Reforged/tree/F-3.6.6+1.20.6) |
 
-### Features
+See [Forge compatibility](#forge-compatibility) for minimum loader versions and [installation](#installation) for choosing a release.
 
-YACL has a ton of configuration features:
+## Usage for developers
 
-- Custom control widgets
-    - Create your own unique "controller" if the default set does not suit your needs
-- Rich descriptions
-    - Clickable & hoverable text, powered by vanilla's Text component system
-    - WebP (including animated) image previews
-    - Custom rich-renderable section to replace image
-- Multiple controllers for the same type:
-    - Sliders or fields for numbers
-    - Dropdowns, cyclers, or raw text fields for strings
-    - Tickboxes or ON/OFF text display for booleans
-    - ...and more!
-- Fully-featured color picker
-- Accessible with full compatibility for keyboard control (optimised for Controlify usage)
-- High organisation with tabs (categories) and collapsable groups
-- Built-in serialization/deserialization techniques so you can skip the error-prone config code
-- Full alternative Kotlin DSL
+Declare `yacl_reforged` as your Forge dependency. Existing `dev.isxander.yacl3` imports and resource identifiers remain unchanged. See the [upstream API documentation](https://docs.isxander.dev/yet-another-config-lib) for configuration builders and controllers.
 
-### Version support
+YACL embeds no Kotlin runtime and has no mandatory Kotlin dependency. Its Java API works on its own. Mods using the Kotlin DSL must provide a compatible external Kotlin runtime; see [installation](#installation).
 
-YACL supports a huge amount of versions, all kept up to date and released simultaneously, thanks to the amazing
-[Stonecutter](https://stonecutter.kikugie.dev/) build tool.
+## Building
 
-| Version                 | Fabric | Forge | NeoForge |
-|-------------------------|--------|-------|----------|
-| **1.20.1**              | ✅      | ✅     | ⛔        |
-| **1.20.4**              | ✅      | ⛔     | ✅        |
-| **1.20.5 - 1.20.6**     | ✅      | ⛔     | ✅        |
-| **1.21.0 - 1.21.1**     | ✅      | ⛔     | ✅        |
-| **1.21.2** (RC version) | ✅      | ⛔     | ⛔        |
+Run Gradle with JDK 25. Java toolchains use Java 17 for Minecraft 1.20–1.20.4, Java 21 for 1.20.6 and 1.21.x, and Java 25 for 26.x.
 
-That's **9** different targets, supporting versions that are 500+ days old!
+```powershell
+.\gradlew.bat :26.3-forge:buildAndCollect "-Ptargets=26.3" --configure-on-demand
+.\gradlew.bat -p 1.21.x :1.21.11-forge:buildAndCollect "-Ptargets=1.21.11" --configure-on-demand
+.\gradlew.bat -p 1.20.x :1.20-forge:buildAndCollect "-Ptargets=1.20" --configure-on-demand
+```
 
-_**Note**: Forge (LexForge) is not and will not be supported past 1.20.1. 
-If you're a developer, please port to NeoForge.
-If you're a user, you may find that all your favourite mods have already done so._
+On Linux and macOS, use `./gradlew` with the same arguments. Release JARs and their matching sources are collected in each source family's `build/releases` directory. The 1.20.x SRG remapping step also needs Python 3.11 or newer on `PATH`.
 
-Each is a separate build, so make sure your users get the correct YACL version for their target of choice.
+Collected release files are located in `build/releases/` for 26.x, `1.21.x/build/releases/` for 1.21.x, and `1.20.x/build/releases/` for 1.20.x. Install `yacl-reforged-<version>.jar`; `*-sources.jar` contains source code and does not belong in `mods`.
 
-### Design
+The project retains upstream Stonecutter preprocessing. `src` and `versions` contain the 26.x family; `1.21.x` contains 1.21.x; `1.20.x` contains 1.20.x. Each target’s `versions/<target>/gradle.properties` defines its Minecraft and Forge ranges and shared artifact version. The upstream demonstration mod remains in each family's `src/testmod`.
 
-YACL is designed to fit right in with the vanilla GUI aesthetic, and will evolve with Minecraft itself. Take a look at
-the gallery to see how even in all the currently supported versions, YACL's design looks different to fit in with
-vanilla GUI updates.
+## Installation
 
-![image preview](https://cdn.modrinth.com/data/1eAoo2KR/images/5862570281f5109119c11f21a1bba52b6a2ab17f.png)
+Download the Forge JAR matching your Minecraft version from [Modrinth](https://modrinth.com/project/Uwg487V8) and place it in `mods`. Use at least the Forge version listed in [Forge compatibility](#forge-compatibility).
 
-## Usage for Developers
+YACL is a library: an integrating mod opens its configuration screen. That mod must support Forge and declare the `yacl_reforged` dependency.
 
-See [The documentation site](https://docs.isxander.dev/yet-another-config-lib) for how to use YACL in your mod.
+### Kotlin mods
+
+YACL's Java API needs no Kotlin companion. If an integrating mod uses Kotlin or the Kotlin DSL, install the runtime it requires. The following companions have been tested with this port:
+
+| Minecraft | Tested companion for Kotlin mods |
+| --- | --- |
+| 1.20, 1.20.1, 1.20.2, 1.20.3, 1.20.4 | Official 4.12.0 |
+| 1.20.6, 1.21, 1.21.1, 1.21.3, 1.21.4, 1.21.5 | Official 5.12.0 |
+| 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, 1.21.11 | Kotlin Reforged 7.0.0+1.21.6-26.3 |
+| 26.1, 26.1.1, 26.1.2, 26.2, 26.3 | Kotlin Reforged 7.0.0+1.21.6-26.3 |
+
+Official downloads: [Kotlin for Forge 4.12.0](https://modrinth.com/mod/kotlin-for-forge/version/Zsh14XeQ), [Kotlin for Forge 5.12.0](https://modrinth.com/mod/kotlin-for-forge/version/uhJhCT7X). For modern Forge, use [Kotlin Reforged](https://modrinth.com/project/QXMi7yei), mod ID `kotlin_reforged`.
+
+Install one matching runtime. Sources archives belong with source distributions, not in `mods`.
+
+### Bug reports
+
+Report problems at [GitHub Issues](https://github.com/SvyatON/YACL-Reforged/issues). Include Minecraft and Forge versions, the YACL JAR filename, the relevant log and steps to reproduce the problem.
+
+## Forge compatibility
+
+Use these minimum Forge versions or later patches for the corresponding Minecraft release. The latest column records the endpoint checked on 2026-10-11.
+
+| Minecraft | Minimum Forge | Latest check target |
+|---|---|---|
+| 1.20 | 46.0.14 | 46.0.14 |
+| 1.20.1 | 47.4.10 | 47.4.26 |
+| 1.20.2 | 48.1.0 | 48.1.0 |
+| 1.20.3 | 49.0.2 | 49.0.2 |
+| 1.20.4 | 49.0.3 | 49.2.8 |
+| 1.20.6 | 50.1.20 | 50.2.10 |
+| 1.21 | 51.0.33 | 51.0.33 |
+| 1.21.1 | 52.1.10 | 52.1.16 |
+| 1.21.3 | 53.0.25 | 53.1.12 |
+| 1.21.4 | 54.0.6 | 54.1.18 |
+| 1.21.5 | 55.0.4 | 55.1.14 |
+| 1.21.6 | 56.0.9 | 56.0.9 |
+| 1.21.7 | 57.0.3 | 57.0.3 |
+| 1.21.8 | 58.1.0 | 58.1.22 |
+| 1.21.9 | 59.0.5 | 59.0.5 |
+| 1.21.10 | 60.0.18 | 60.1.15 |
+| 1.21.11 | 61.0.1 | 61.2.1 |
+| 26.1 | 62.0.9 | 62.0.9 |
+| 26.1.1 | 63.0.1 | 63.0.2 |
+| 26.1.2 | 64.0.8 | 64.1.3 |
+| 26.2 | 65.1.0 | 65.1.3 |
+| 26.3 | 66.0.4 | 66.0.10 |
+
+Shared Minecraft JARs use separate Maven ranges where Forge majors have different minimum patches. Higher patches are accepted by metadata; a future Forge API change may require an update.
+
+The supported Minecraft profiles are defined by `versions/*/gradle.properties` in each source family.
+
+## Source provenance
+
+Upstream: [isXander/YetAnotherConfigLib](https://github.com/isXander/YetAnotherConfigLib). Original author: isXander. Forge port: SvyatON.
+
+| Source family | Upstream revision | Upstream version |
+| --- | --- | --- |
+| Minecraft 26.x | `97f89e5bd0eff3811324680b6dec9e0e1009b8c0` | 3.9.7 |
+| Minecraft 1.20.x | `ae66e4c77c13e4e153da5afb9271ed59a359589e` | 3.6.6 |
+| Minecraft 1.21.x | `18f25e168bf7778024b103fbbfc0327bd913bb65` | 3.8.2 |
+
+The port retains upstream Git history, library packages, API, translations and resource namespaces. It adapts Forge entrypoints, platform access, reload listeners, access transformers, rendering access, loader metadata and Jar-in-Jar packaging. Minecraft 1.20–1.20.4 releases use SRG mappings; later releases use official names.
+
+Each source family retains its original demonstration mod. Kotlin libraries are compile-only dependencies; release JARs embed no Kotlin runtime and declare no mandatory Kotlin companion. The port uses its own orange gear logo.
+
+Original copyright attribution and the LGPL-3.0-or-later license are preserved.
 
 ## License
 
-This mod is under the [GNU Lesser General Public License, v3.0](LICENSE).
+YACL Reforged is distributed under [LGPL-3.0-or-later](LICENSE). Original author attribution and license are preserved.
+
+Full GPL terms referenced by LGPL are provided in [src/legal/LICENSES/GPL-3.0.txt](src/legal/LICENSES/GPL-3.0.txt). See [NOTICE](src/legal/NOTICE), [dated modifications](src/legal/MODIFICATIONS.md), [third-party licenses](src/legal/THIRD-PARTY-LICENSES.md) and the [full legal texts](src/legal/LICENSES).
+
+Legal texts and notices are retained as separate files so they can accompany source distributions and be included in release JARs under `META-INF`. Installation, compatibility, source provenance and release instructions are provided in this README.
+
+## Publishing a release
+
+Forge release tags use `F-<YACL version>+<Minecraft version or range>`, for example `F-3.9.7+26.3` or `F-3.8.2+1.21.6-1.21.8`. Each tag preserves the complete corresponding public source snapshot. The source links for current releases are listed in [Supported versions](#supported-versions).
+
+YACL Reforged retains LGPL-3.0-or-later. Preserve the upstream author, copyright and license notices, the dated modification notice, and third-party notices. Present the project as an unofficial Forge port; do not imply upstream endorsement.
+
+Build from the repository root using the commands in [Building](#building). Run `python gradle/package-project-sources.py` from the repository root after building. The archive contains all source families, resources, Gradle scripts/wrappers, target properties, legal documents and matching published sources of bundled dependencies. `release-artifacts.json` inside records the available binary versions and SHA-256 hashes. A standard `*-sources.jar` alone is not the complete buildable source distribution.
+
+For every published binary:
+
+1. Commit the exact corresponding public sources, resources and build/packaging scripts. Preserve them with a matching release tag whose name or format has been selected by the maintainer. Keep the matching sources downloadable without charge for as long as required by the applicable license. Never substitute newer or unrelated sources for an older binary.
+2. Place a browsable link to that matching GitHub tag on the specific version page or changelog on Modrinth, CurseForge or another distribution platform. State the source family and Gradle target needed to build that binary. One tagged Stonecutter snapshot can correspond to multiple binaries when it contains the complete corresponding sources and build instructions for each target. A separate sources JAR/ZIP attachment is optional when this source-access method satisfies the applicable license. The complete project ZIP remains available as an alternative source distribution; a standard sources JAR by itself omits required build materials.
+3. Publish README.md, LICENSE and the complete src/legal directory with the sources. Binary JARs already carry the applicable legal documents under META-INF.
+4. Select LGPL-3.0-or-later on the project page, credit isXander and link the original repository. Keep homepage, source and issue links accurate. State the tested Minecraft and Forge ranges.
+5. If distributing optional Kotlin Reforged alongside YACL, provide access to its exact matching complete sources under its applicable license and retain its own licenses and third-party notices. A matching public source tag can be used when that license permits it. Separate download links are preferable to repackaging a runtime into YACL.
+
+The project uses replaceable JARs and imposes no further restriction on modifying the LGPL library, debugging modifications or rebuilding an interface-compatible replacement. No Minecraft game files, test installations, credentials or private tools belong in the source archive.
+
+Before uploading to any hosting service, verify its current content rules separately from copyright licensing.
+
+The original logo PNG is retained in `src/branding/yacl-reforged-original.png`; optimized runtime copies are 256 pixels.

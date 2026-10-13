@@ -1,0 +1,40 @@
+YACL Reforged
+
+This is an unofficial modified distribution of YetAnotherConfigLib by isXander
+and its contributors: https://github.com/isXander/YetAnotherConfigLib
+Forge port maintained by SvyatON. No upstream endorsement is claimed.
+
+Modification notice: SvyatON changed this distribution for Forge compatibility,
+packaging and Reforged branding. Current source snapshot and licensing/packaging
+changes: 2026-10-13. The changed-file inventory and upstream revisions are in
+src/legal/MODIFICATIONS.md and README.md (Source provenance). Earlier upstream notices remain in their files.
+
+YACL and this modified library are licensed under LGPL-3.0-or-later.
+You may redistribute and modify the library under those terms. There is no
+warranty, including merchantability or fitness for a particular purpose.
+See the repository root LICENSE and src/legal/LICENSES/GPL-3.0.txt; in JARs see META-INF/LICENSE and
+META-INF/licenses/GPL-3.0.txt. The license does not grant trademark endorsement.
+
+Third-party components retain their own licenses and copyright notices; see
+src/legal/THIRD-PARTY-LICENSES.md and src/legal/LICENSES; in JARs see META-INF/THIRD-PARTY-LICENSES.md and META-INF/licenses.
+Cloth Config code in ElementListWidgetExt retains its original LGPL3 notice.
+The replacement orange gear logo was supplied by SvyatON for this project.
+
+Complete corresponding source, resources and build scripts are available from
+the matching release tag linked on the specific binary version page, or from
+an accompanying YACL-Reforged-project-sources.zip. Standard *-sources.jar files
+provide preprocessed library sources, but omit the complete build materials.
+Source repository:
+https://github.com/SvyatON/YACL-Reforged
+Installation and rebuilding instructions: README.md (Installation and Building).
+The library can be rebuilt and its JAR replaced with an interface-compatible
+modified version; this distribution imposes no additional restriction on that.
+
+This product includes software developed by the Apache Software Foundation
+(http://www.apache.org/). Original Apache Commons NOTICE and the historical
+Batik Apache-1.1 notice are reproduced under META-INF/licenses in binaries.
+The Apache-origin IndexImage source was also published unchanged under
+Apache-2.0 in Batik 1.6; this distribution relies on that grant for the
+Apache-origin code. See src/legal/LICENSES/Batik-Apache-2.0-provenance.txt, or the
+same file under META-INF/licenses in binary JARs, for immutable source
+references and the original grant. All historical notices are retained.

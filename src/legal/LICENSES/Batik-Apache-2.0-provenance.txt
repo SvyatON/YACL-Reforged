@@ -1,0 +1,50 @@
+Apache-origin IndexImage code used by TwelveMonkeys common-image
+
+TwelveMonkeys 3.12.0 common-image IndexImage.java contains a BSD-3-Clause
+notice for Harald Kuhr's adaptation and a historical Apache-1.1 notice for
+the Apache Batik code. Both original notices are retained verbatim in
+TwelveMonkeys-source-notices.txt; the dependency JAR remains unmodified.
+
+The Apache Software Foundation also published the original Batik IndexImage
+under Apache-2.0 in Batik 1.6. Its source body, beginning with the package
+declaration and including comments, is byte-identical to Batik 1.5.1's
+Apache-1.1 version. This distribution relies on that Apache-2.0 grant for
+the Apache-origin code and retains the BSD terms for the TwelveMonkeys
+adaptation. This is a documented additional grant from Apache, not a
+claim that a downstream license header can be silently replaced.
+
+Published Apache-1.1 source, Batik 1.5.1:
+https://github.com/apache/xmlgraphics-batik/blob/fef3b6c643860e00dc8669ca3bbe0d1324f32f47/sources/org/apache/batik/ext/awt/image/rendered/IndexImage.java
+Complete file SHA-256:
+78a3a5379010a9eddf9605b5773124d2e2597587829024120ab3e7390fc1f88c
+
+Published Apache-2.0 source, Batik 1.6:
+https://github.com/apache/xmlgraphics-batik/blob/6e7896fed6e11436db2085c2c52a4f8519a08ac4/sources/org/apache/batik/ext/awt/image/rendered/IndexImage.java
+Complete file SHA-256:
+739e3db13e6abf22b0fbdfe79e34f2c6350cb61b53714ef572d9d6603b6de348
+
+Both exact source bodies contain 17137 bytes and have SHA-256:
+5f3857eeb5cf2940aeed15bf3db22d6c1d826b717269d33651874555629c7895
+
+Original Apache-2.0 header published with Batik 1.6:
+
+/*
+
+   Copyright 2002-2003  The Apache Software Foundation
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+ */
+
+The full Apache-2.0 license is provided in Apache-2.0.txt. Original ASF
+copyright, acknowledgment and historical notices are also retained.
