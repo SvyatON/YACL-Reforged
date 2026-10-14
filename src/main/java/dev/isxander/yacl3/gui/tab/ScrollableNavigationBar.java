@@ -2,26 +2,23 @@ package dev.isxander.yacl3.gui.tab;
 
 import com.google.common.collect.ImmutableList;
 import dev.isxander.yacl3.gui.render.ColorGradientRenderState;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
 import dev.isxander.yacl3.mixin.TabNavigationBarAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.TabButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-//? if >=26.2
-import net.minecraft.client.gui.components.tabs.MenuTabBar;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
-//? if <26.2
-//import net.minecraft.client.gui.components.tabs.TabNavigationBar;
+import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
-public class ScrollableNavigationBar
-        extends /*? if >=26.2 {*/MenuTabBar/*?} else {*//*TabNavigationBar*//*?}*/ {
+public class ScrollableNavigationBar extends TabNavigationBar {
     private static final int NAVBAR_MARGIN = 28;
 
     private static final Font font = Minecraft.getInstance().font;
@@ -32,15 +29,7 @@ public class ScrollableNavigationBar
     private final TabNavigationBarAccessor accessor;
 
     public ScrollableNavigationBar(int width, TabManager tabManager, Iterable<? extends Tab> tabs) {
-        //? if >=26.2 {
-        var tabsList = ImmutableList.<Tab>copyOf(tabs);
-        var tabButtonsList = ImmutableList.copyOf(tabsList.stream()
-                .<TabButton>map(tab -> new MenuTabButton(tabManager, tab, 0, 24))
-                .toList());
-        super(0, 0, width, 24, tabManager, tabButtonsList, tabsList);
-        //?} else {
-        /*super(width, tabManager, ImmutableList.copyOf(tabs));
-        *///?}
+        super(width, tabManager, ImmutableList.copyOf(tabs));
         this.accessor = (TabNavigationBarAccessor) this;
 
         // add tab tooltips to the tab buttons
@@ -52,12 +41,9 @@ public class ScrollableNavigationBar
     }
 
     @Override
-    public void arrangeElements(/*? if >=26.2 {*/final int pWidth/*?}*/) {
-        int width = /*? if >=26.2 {*/ pWidth; /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
-
+    public void arrangeElements() {
         ImmutableList<TabButton> tabButtons = accessor.yacl$getTabButtons();
-        int noScrollWidth = width - NAVBAR_MARGIN*2;
+        int noScrollWidth = accessor.yacl$getWidth() - NAVBAR_MARGIN*2;
 
         int allTabsWidth = 0;
         // first pass: set the width of each tab button
@@ -80,34 +66,27 @@ public class ScrollableNavigationBar
             allTabsWidth = noScrollWidth;
         }
 
+        Layout layout = ((TabNavigationBarAccessor) this).yacl$getLayout();
         layout.arrangeElements();
         layout.setY(0);
         scrollOffset = 0;
 
-        layout.setX(Math.max((width - allTabsWidth) / 2, NAVBAR_MARGIN));
+        layout.setX(Math.max((accessor.yacl$getWidth() - allTabsWidth) / 2, NAVBAR_MARGIN));
         this.maxScrollOffset = Math.max(0, allTabsWidth - noScrollWidth);
     }
 
     @Override
-    //? if >=26.2 {
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-    //?} else {
-    /*public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-    *///?}
-        graphics.pose().pushMatrix();
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        GuiUtils.pushPose(graphics);
         // render option list BELOW the navbar without need to scissor
+        GuiUtils.translateZ(graphics, 10);
 
-        //? if >=26.2 {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
-        //?} else {
-        /*super.extractRenderState(graphics, mouseX, mouseY, a);
-        *///?}
+        super.render(graphics, mouseX, mouseY, delta);
 
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
-        int width = /*? if >=26.2 {*/ this.getWidth(); /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
+        LinearLayout layout = accessor.yacl$getLayout();
         // draw right fade
         if (this.scrollOffset < this.maxScrollOffset - NAVBAR_MARGIN) {
-            int right = width;
+            int right = accessor.yacl$getWidth();
             ColorGradientRenderState.createHorizontal(
                     graphics,
                     right - 40,
@@ -117,7 +96,7 @@ public class ScrollableNavigationBar
                     0x00000000, 0xFF000000
             ).submit(graphics);
 
-            graphics.text(font, "→", right - 10, layout.getY() + (layout.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF, false);
+            graphics.drawString(font, "→", right - 10, layout.getY() + (layout.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF, false);
         }
 
         // draw left fade
@@ -131,10 +110,10 @@ public class ScrollableNavigationBar
                     0xFF000000, 0x00000000
             ).submit(graphics);
 
-            graphics.text(font, "←", 5, layout.getY() + (layout.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF, false);
+            graphics.drawString(font, "←", 5, layout.getY() + (layout.getHeight() - font.lineHeight) / 2, 0xFFFFFFFF, false);
         }
 
-        graphics.pose().popMatrix();
+        GuiUtils.popPose(graphics);
     }
 
     @Override
@@ -149,7 +128,7 @@ public class ScrollableNavigationBar
     }
 
     public void setScrollOffset(int scrollOffset) {
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
+        Layout layout = ((TabNavigationBarAccessor) this).yacl$getLayout();
 
         layout.setX(layout.getX() + this.scrollOffset);
         this.scrollOffset = Mth.clamp(scrollOffset, 0, maxScrollOffset);
@@ -169,18 +148,10 @@ public class ScrollableNavigationBar
     }
 
     protected void ensureVisible(TabButton tabButton) {
-        int width = /*? if >=26.2 {*/ this.getWidth(); /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
-
         if (tabButton.getX() < NAVBAR_MARGIN) {
             this.setScrollOffset(this.scrollOffset - (NAVBAR_MARGIN - tabButton.getX()));
-        } else if (tabButton.getX() + tabButton.getWidth() > width - NAVBAR_MARGIN) {
-            this.setScrollOffset(this.scrollOffset + (tabButton.getX() + tabButton.getWidth() - (width - NAVBAR_MARGIN)));
-        }
-    }
-
-    public void updateTabNames() {
-        for (TabButton tabButton : accessor.yacl$getTabButtons()) {
-            tabButton.setMessage(tabButton.tab().getTabTitle());
+        } else if (tabButton.getX() + tabButton.getWidth() > accessor.yacl$getWidth() - NAVBAR_MARGIN) {
+            this.setScrollOffset(this.scrollOffset + (tabButton.getX() + tabButton.getWidth() - (accessor.yacl$getWidth() - NAVBAR_MARGIN)));
         }
     }
 

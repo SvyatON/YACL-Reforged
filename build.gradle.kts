@@ -12,13 +12,19 @@ plugins {
 }
 
 val mcVersion = property("mcVersion").toString()
+val legacyRenderingAT = rootProject.file("src/main/compat/legacy-rendering.cfg").takeIf { stonecutter.eval(mcVersion, "<1.21.5") }
+if (stonecutter.eval(mcVersion, "<1.21.1")) {
+    configurations.configureEach {
+        resolutionStrategy.force("net.sf.jopt-simple:jopt-simple:5.0.4")
+    }
+}
 val releaseMinecraft = findProperty("artifact.minecraft") ?: mcVersion
 val releaseVersion = "${property("modVersion")}+$releaseMinecraft"
 version = releaseVersion
 group = "dev.svyaton"
 base.archivesName = "yacl-reforged"
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
 }
 stonecutter {
@@ -30,9 +36,64 @@ stonecutter {
         put("controlify", false)
         put("mod-menu", false)
     }
+    replacements {
+        string {
+            direction = eval(current.version, ">=1.21.5")
+            replace("new ClickEvent(ClickEvent.Action.OPEN_URL, \"https://isxander.dev\")", "new ClickEvent.OpenUrl(URI.create(\"https://isxander.dev\"))")
+        }
+        string {
+            direction = eval(current.version, ">=1.21.11")
+            replace("ResourceLocation", "Identifier")
+        }
+        string {
+            direction = eval(current.version, ">=1.21.11")
+            replace("import net.minecraft.Util;", "import net.minecraft.util.Util;")
+        }
+    }
 }
+val forgeEntrypoint = tasks.register("generateForgeEntrypoint") {
+    val file = layout.buildDirectory.file("generated/java/dev/isxander/yacl3/platform/PlatformEntrypoint.java")
+    inputs.property("minecraft", mcVersion)
+    outputs.file(file)
+    doLast {
+        val modernBus = stonecutter.eval(mcVersion, ">=1.21.9")
+        val defaultConstructor = if (stonecutter.eval(mcVersion, "<1.21.2")) "public PlatformEntrypoint() { this(FMLJavaModLoadingContext.get()); }\n                    " else ""
+        val listener = when {
+            modernBus -> "RegisterClientReloadListenersEvent.BUS.addListener"
+            stonecutter.eval(mcVersion, ">=1.21.6") -> "RegisterClientReloadListenersEvent.getBus(context.getModBusGroup()).addListener"
+            else -> "context.getModEventBus().<RegisterClientReloadListenersEvent>addListener"
+        }
+        file.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText("""
+                package dev.isxander.yacl3.platform;
+                import net.minecraftforge.api.distmarker.Dist;
+                import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+                import net.minecraftforge.fml.common.Mod;
+                import net.minecraftforge.fml.loading.FMLEnvironment;
+                import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+                import dev.isxander.yacl3.gui.image.YACLImageReloadListener;
+                @Mod("yacl_reforged")
+                public class PlatformEntrypoint {
+                    ${defaultConstructor}public PlatformEntrypoint(FMLJavaModLoadingContext context) {
+                        if (FMLEnvironment.dist == Dist.CLIENT) Client.initialize(context);
+                    }
+                    private static final class Client {
+                        private static void initialize(FMLJavaModLoadingContext context) {
+                            YACLConfig.HANDLER.load();
+                            $listener(event -> event.registerReloadListener(new YACLImageReloadListener()));
+                        }
+                    }
+                }
+            """.trimIndent())
+        }
+    }
+}
+sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/java")) }
 minecraft {
+    mappings("official", mcVersion)
     accessTransformers.from(rootProject.file("src/main/resources/META-INF/accesstransformer.cfg"))
+    legacyRenderingAT?.let { accessTransformers.from(it) }
     runs {
         configureEach {
             workingDir = layout.projectDirectory.dir("run")
@@ -54,6 +115,7 @@ repositories {
 jarJar.register { archiveClassifier = "" }
 
 dependencies {
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
     implementation(minecraft.dependency("net.minecraftforge:forge:$mcVersion-${property("deps.forge")}"))
     val bundled = listOf(
         "org.jetbrains:annotations:26.0.2",
@@ -66,7 +128,8 @@ dependencies {
         "org.quiltmc.parsers:json:${property("deps.quiltParsers")}",
         "org.quiltmc.parsers:gson:${property("deps.quiltParsers")}",
         "org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
-        "org.jetbrains.kotlin:kotlin-reflect:2.3.0"
+        "org.jetbrains.kotlin:kotlin-reflect:2.3.0",
+        "io.github.llamalad7:mixinextras-forge:0.5.0"
     )
     bundled.forEach {
         if (it.startsWith("org.jetbrains.kotlin:")) {
@@ -91,15 +154,21 @@ tasks.processResources {
     from(rootProject.file("src/main/templates/META-INF/mods.toml")) { into("META-INF"); expand(metadata) }
     filesMatching("pack.mcmeta") { expand(mapOf("name" to metadata.getValue("mod_name"))) }
     exclude("yacl-fabric.mixins.json")
+    legacyRenderingAT?.let { extra ->
+        inputs.file(extra)
+        doLast {
+            destinationDir.resolve("META-INF/accesstransformer.cfg").appendText(extra.readText())
+        }
+    }
 }
 tasks.withType<JavaCompile>().configureEach {
-    dependsOn("stonecutterGenerate")
+    dependsOn("stonecutterGenerate", forgeEntrypoint)
     options.encoding = "UTF-8"
     options.compilerArgs.add("-proc:none")
 }
 tasks.withType<KotlinCompile>().configureEach {
-    dependsOn("stonecutterGenerate")
-    compilerOptions.jvmTarget = JvmTarget.JVM_25
+    dependsOn("stonecutterGenerate", forgeEntrypoint)
+    compilerOptions.jvmTarget = JvmTarget.JVM_21
 }
 tasks.jar {
     archiveClassifier = "slim"
@@ -150,6 +219,8 @@ publishing {
         }
     }
 }
+
+tasks.named("sourcesJar") { dependsOn(forgeEntrypoint) }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
