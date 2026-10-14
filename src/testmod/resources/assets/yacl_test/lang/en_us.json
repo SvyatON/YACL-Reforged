@@ -1,4 +1,0 @@
-{
-    "yacl3.config.yacl3-test:config.category.test.group.master_test": "My group!",
-    "yacl3.config.yacl3-test:config.category.test.group.master_test.desc": "This group has a description via a translation key."
-}

@@ -61,7 +61,7 @@ On Linux and macOS, use `./gradlew` with the same arguments. Release JARs and th
 
 Collected release files are located in `build/releases/` for 26.x, `1.21.x/build/releases/` for 1.21.x, and `1.20.x/build/releases/` for 1.20.x. Install `yacl-reforged-<version>.jar`; `*-sources.jar` contains source code and does not belong in `mods`.
 
-The project retains upstream Stonecutter preprocessing. `src` and `versions` contain the 26.x family; `1.21.x` contains 1.21.x; `1.20.x` contains 1.20.x. Each target’s `versions/<target>/gradle.properties` defines its Minecraft and Forge ranges and shared artifact version. The upstream demonstration mod remains in each family's `src/testmod`.
+The project retains upstream Stonecutter preprocessing. `src` and `versions` contain the 26.x family; `1.21.x` contains 1.21.x; `1.20.x` contains 1.20.x. Each target’s `versions/<target>/gradle.properties` defines its Minecraft and Forge ranges and shared artifact version.
 
 ## Installation
 
@@ -133,7 +133,7 @@ Upstream: [isXander/YetAnotherConfigLib](https://github.com/isXander/YetAnotherC
 
 The port retains upstream Git history, library packages, API, translations and resource namespaces. It adapts Forge entrypoints, platform access, reload listeners, access transformers, rendering access, loader metadata and Jar-in-Jar packaging. Minecraft 1.20–1.20.4 releases use SRG mappings; later releases use official names.
 
-Each source family retains its original demonstration mod. Kotlin libraries are compile-only dependencies; release JARs embed no Kotlin runtime and declare no mandatory Kotlin companion. The port uses its own orange gear logo.
+Kotlin libraries are compile-only dependencies; release JARs embed no Kotlin runtime and declare no mandatory Kotlin companion. The port uses its own orange gear logo.
 
 Original copyright attribution and the LGPL-3.0-or-later license are preserved.
 
@@ -147,7 +147,7 @@ Legal texts and notices are retained as separate files so they can accompany sou
 
 ## Publishing a release
 
-Forge release tags use `F-<YACL version>+<Minecraft version or range>`, for example `F-3.9.7+26.3` or `F-3.8.2+1.21.6-1.21.8`. Each tag preserves the complete corresponding public source snapshot. The source links for current releases are listed in [Supported versions](#supported-versions).
+Forge release tags use `F-<YACL version>+<Minecraft version or range>`, for example `F-3.9.7+26.3` or `F-3.8.2+1.21.6-1.21.8`. Each tag contains a standalone source project for that release only, including its resources, build scripts and required legal notices. The source links for current releases are listed in [Supported versions](#supported-versions).
 
 YACL Reforged retains LGPL-3.0-or-later. Preserve the upstream author, copyright and license notices, the dated modification notice, and third-party notices. Present the project as an unofficial Forge port; do not imply upstream endorsement.
 

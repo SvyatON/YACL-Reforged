@@ -35,7 +35,7 @@ jobs:
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew -p '${{ matrix.project }}' '${{ matrix.artifactTarget || matrix.target }}:buildAndCollect' '${{ matrix.artifactTarget || matrix.target }}:testmodClasses' -Ptargets=${{ matrix.artifactTarget || matrix.target }} --configure-on-demand --max-workers=2 --console=plain
+      - run: ./gradlew -p '${{ matrix.project }}' '${{ matrix.artifactTarget || matrix.target }}:buildAndCollect' -Ptargets=${{ matrix.artifactTarget || matrix.target }} --configure-on-demand --max-workers=2 --console=plain
       - run: python3 gradle/package-project-sources.py
       - uses: actions/upload-artifact@v4
         with:

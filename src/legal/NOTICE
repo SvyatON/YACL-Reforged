@@ -6,7 +6,7 @@ Forge port maintained by SvyatON. No upstream endorsement is claimed.
 
 Modification notice: SvyatON changed this distribution for Forge compatibility,
 packaging and Reforged branding. Current source snapshot and licensing/packaging
-changes: 2026-10-13. The changed-file inventory and upstream revisions are in
+changes: 2026-10-14. The changed-file inventory and upstream revisions are in
 src/legal/MODIFICATIONS.md and README.md (Source provenance). Earlier upstream notices remain in their files.
 
 YACL and this modified library are licensed under LGPL-3.0-or-later.

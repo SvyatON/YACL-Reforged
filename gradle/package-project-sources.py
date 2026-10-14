@@ -58,6 +58,8 @@ def release_profiles():
     entries = []
     for family in ('.', '1.20.x', '1.21.x'):
         directory = ROOT / family
+        if not (directory / 'gradle.properties').is_file():
+            continue
         common = dict(line.split('=', 1) for line in (directory / 'gradle.properties').read_text().splitlines() if '=' in line and not line.lstrip().startswith('#'))
         for path in sorted((directory / 'versions').glob('*/gradle.properties')):
             properties = dict(line.split('=', 1) for line in path.read_text().splitlines() if '=' in line and not line.lstrip().startswith('#'))
@@ -68,7 +70,10 @@ def release_profiles():
 def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     files = public_files()
-    expected = {'README.md', 'LICENSE', 'src/legal/NOTICE', 'src/legal/MODIFICATIONS.md', 'src/legal/LICENSES/GPL-3.0.txt', 'build.gradle.kts', '1.20.x/build.gradle.kts', '1.21.x/build.gradle.kts', 'gradle/package-project-sources.py'}
+    expected = {'README.md', 'LICENSE', 'src/legal/NOTICE', 'src/legal/MODIFICATIONS.md', 'src/legal/LICENSES/GPL-3.0.txt', 'build.gradle.kts', 'settings.gradle.kts', 'stonecutter.gradle.kts', 'gradle/wrapper/gradle-wrapper.jar', 'gradle/package-project-sources.py'}
+    for family in ('1.20.x', '1.21.x'):
+        if (ROOT / family / 'gradle.properties').is_file():
+            expected.add(family + '/build.gradle.kts')
     actual = {path.relative_to(ROOT).as_posix() for path in files}
     if not expected <= actual:
         raise ValueError(f'Missing complete-source files: {expected - actual}')

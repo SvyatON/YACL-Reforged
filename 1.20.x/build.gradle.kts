@@ -1,7 +1,6 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
-import java.security.MessageDigest
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -96,50 +95,15 @@ val forgeEntrypoint = tasks.register("generateForgeEntrypoint") {
     }
 }
 sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/java")) }
-val localQa = rootProject.file("../.tools/qa/classic")
-val testmod = sourceSets.create("testmod") {
-    if (localQa.exists()) {
-        java.srcDir(localQa.resolve("java"))
-        resources.srcDir(localQa.resolve("resources"))
-    }
-    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
-    runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
-}
-val qaModJar = tasks.register<Jar>("qaModJar") {
-    archiveClassifier = "testmod"
-    from(testmod.output)
-    manifest.attributes("MixinConfigs" to if (localQa.exists()) "yacl-test.mixins.json,yacl-server-test.mixins.json" else "yacl-test.mixins.json")
-}
 minecraft {
     mappings("official", mcVersion)
     accessTransformers.from(rootProject.file("src/main/resources/META-INF/accesstransformer.cfg"))
     runs {
         configureEach {
             workingDir = layout.projectDirectory.dir("run")
-            systemProperty("eventbus.api.strictRuntimeChecks", "true")
-            if (providers.gradleProperty("qaKff").orNull == "true") systemProperty("yacl.reforged.qa.kff", "true")
-            systemProperty("yacl.reforged.qa.kffId", providers.gradleProperty("qaKffId").orElse("kotlinforforge").get())
-            systemProperty("yacl.reforged.qa.kotlinVersion", providers.gradleProperty("qaKotlinVersion").orElse("").get())
-            systemProperty("yacl.reforged.qa.extraModId", providers.gradleProperty("qaExtraModId").orElse("").get())
-            systemProperty("yacl.reforged.qa.noKotlin", providers.gradleProperty("qaNoKotlin").orElse("false").get())
-            if (providers.gradleProperty("qaKffProbe").orNull == "true") systemProperty("yacl.reforged.qa.kffProbe", "true")
         }
-        register("client") {
-            if (providers.gradleProperty("qa").orNull == "true") {
-                args("--mixin.config=yacl-test.mixins.json")
-                systemProperty("yacl.reforged.qa", "true")
-            }
-            with(testmod) {
-                args("--mixin.config=yacl.mixins.json", "--mixin.config=yacl-test.mixins.json")
-            }
-        }
-        register("server") {
-            args("--nogui")
-            if (providers.gradleProperty("qaServer").orNull == "true") {
-                args("--mixin.config=yacl-server-test.mixins.json")
-                systemProperty("yacl.reforged.qa.server", "true")
-            }
-        }
+        register("client")
+        register("server") { args("--nogui") }
     }
 }
 repositories {
@@ -153,19 +117,14 @@ repositories {
     mavenCentral()
 }
 jarJar.register { archiveClassifier = "" }
-val bundledRuntime = configurations.create("bundledRuntime") {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-    extendsFrom(configurations.getByName("jarJar"))
-}
+
 dependencies {
     compileOnly("org.jetbrains:annotations:26.0.2")
     if (srgRuntime) {
         annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
-        add(testmod.annotationProcessorConfigurationName, "org.spongepowered:mixin:0.8.5:processor")
     }
     compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
-    implementation(minecraft.dependency(project.name, "net.minecraftforge:forge:$mcVersion-${if (providers.gradleProperty("qaForgeTarget").orNull == project.name) providers.gradleProperty("qaForgeVersion").get() else property("deps.forge")}"))
+    implementation(minecraft.dependency(project.name, "net.minecraftforge:forge:$mcVersion-${property("deps.forge")}"))
     val bundled = listOf(
         "org.jetbrains:annotations:26.0.2",
         "com.twelvemonkeys.imageio:imageio-core:${property("deps.imageio")}",
@@ -210,39 +169,6 @@ tasks.processResources {
     filesMatching("pack.mcmeta") { expand(mapOf("name" to metadata.getValue("mod_name"))) }
     exclude("yacl-fabric.mixins.json", "fabric.mod.json", "META-INF/neoforge.mods.toml", "yacl.accesswidener")
 }
-val qaKffId = providers.gradleProperty("qaKffId").orElse("kotlinforforge").get()
-val qaKffDependency = if (providers.gradleProperty("qaKff").orNull == "true") """
-[[dependencies.yacl_test]]
-modId = "$qaKffId"
-mandatory = true
-type = "required"
-versionRange = "${if (qaKffId in setOf("kotlinreforged", "kotlin_reforged")) "[7,8)" else "[0,)"}"
-ordering = "AFTER"
-side = "BOTH"
-""".trimIndent() else ""
-
-tasks.named<ProcessResources>(testmod.processResourcesTaskName) {
-    inputs.property("qaKffDependency", qaKffDependency)
-    inputs.property("srgRuntime", srgRuntime)
-    if (!srgRuntime) doLast {
-        for (name in listOf("yacl-test.mixins.json", "yacl-server-test.mixins.json")) {
-            val resource = destinationDir.resolve(name)
-            if (!resource.exists()) continue
-            val config = JsonSlurper().parse(resource) as MutableMap<String, Any>
-            config.remove("refmap")
-            destinationDir.resolve(name).writeText(JsonOutput.prettyPrint(JsonOutput.toJson(config)))
-        }
-    }
-    exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")
-    from(rootProject.file("src/testmod/templates/META-INF/mods.toml")) { into("META-INF"); expand(mapOf("qaKffDependency" to qaKffDependency)) }
-    if (localQa.exists()) doLast {
-        val resource = destinationDir.resolve("yacl-test.mixins.json")
-        val config = JsonSlurper().parse(resource) as MutableMap<String, Any>
-        val clients = config.getValue("client") as MutableList<String>
-        if ("ReforgedQAMixin" !in clients) clients.add("ReforgedQAMixin")
-        resource.writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(config)))
-    }
-}
 tasks.withType<JavaCompile>().configureEach {
     dependsOn("stonecutterGenerate", forgeEntrypoint)
     options.encoding = "UTF-8"
@@ -271,8 +197,8 @@ val releaseJar = if (srgRuntime) {
         config("yacl.mixins.json")
         refMap.set("yet_another_config_lib_v3.refmap.json")
         source(sourceSets.main.get())
-        source(testmod)
     }
+    tasks.named("mergeMixinMappings") { dependsOn(tasks.named("compileJava")) }
     val devMappings = renamer.convert("devMixinMappings") {
         map.setFrom(renamer.mappings)
         reverse.set(true)
@@ -287,14 +213,6 @@ val releaseJar = if (srgRuntime) {
     tasks.matching { it.name == "runClient" || it.name == "runServer" }.configureEach { dependsOn(devMappings) }
     tasks.jar {
         from(sourceSets.main.get().extensions.extraProperties.get("refMapFile")!!) { rename { "yet_another_config_lib_v3.refmap.json" } }
-    }
-    qaModJar {
-        from(testmod.extensions.extraProperties.get("refMapFile")!!) { rename { "yet_another_config_lib_v3.testmod.refmap.json" } }
-    }
-    renamer.classes("reobfQaModJar", qaModJar) {
-        map.setFrom(renamer.mixin.generatedMappings.flatMap { it.output })
-        libraries.from(sourceSets.main.get().output)
-        output.set(layout.buildDirectory.file("qa/production/yacl-reforged-$releaseVersion-testmod.jar"))
     }
     val renamed = renamer.classes("reobfJarJar", tasks.named<Jar>("jarJar")) {
         map.setFrom(renamer.mixin.generatedMappings.flatMap { it.output })
@@ -313,10 +231,6 @@ val releaseJar = if (srgRuntime) {
     }
     transform.map { packaged.get() }
 } else {
-    tasks.register<Copy>("reobfQaModJar") {
-        from(qaModJar.flatMap { it.archiveFile })
-        into(layout.buildDirectory.dir("qa/production"))
-    }
     tasks.named<Jar>("jarJar").flatMap { it.archiveFile }
 }
 if (artifactTarget == project.name) {
@@ -351,76 +265,6 @@ publishing {
             developers {
                 developer { id = "isXander"; name = "isXander" }
                 developer { id = "SvyatON"; name = "SvyatON" }
-            }
-        }
-    }
-}
-
-if (providers.gradleProperty("qa").orNull == "true" || providers.gradleProperty("qaServer").orNull == "true" || providers.gradleProperty("packaged").orNull == "true") {
-    afterEvaluate {
-        for (runName in listOf("runClient", "runServer")) {
-            val serverQA = runName == "runServer"
-            val automaticQA = providers.gradleProperty(if (serverQA) "qaServer" else "qa").orNull == "true"
-            if (!automaticQA && (serverQA || providers.gradleProperty("packaged").orNull != "true")) continue
-            val resultName = if (serverQA) "qa-server-result.txt" else "qa-result.txt"
-            val checksumName = if (serverQA) "qa-server-artifact.sha256" else "qa-artifact.sha256"
-            val ownJar = if (artifactTarget == project.name) releaseJar else rootProject.layout.buildDirectory.file("releases/yacl-reforged-$releaseVersion.jar")
-            val overrideJar = providers.gradleProperty("qaJar")
-            val actualJar = if (overrideJar.isPresent) layout.file(overrideJar.map { rootProject.file(it) }) else ownJar
-            val launchJar = if (srgRuntime) {
-                val mapped = renamer.classes("map${runName.replaceFirstChar { it.uppercase() }}Candidate") {
-                    input.set(actualJar)
-                    if (artifactTarget != project.name && !overrideJar.isPresent) dependsOn(":$artifactTarget:buildAndCollect")
-                    reverse.set(true)
-                    naiveSrg.set(true)
-                    output.set(layout.buildDirectory.file("qa/$runName/raw/yacl-reforged-$releaseVersion.jar"))
-                }
-                if (!overrideJar.isPresent) mapped.configure { dependsOn(":$artifactTarget:buildAndCollect") }
-                val candidate = layout.buildDirectory.file("qa/$runName/yacl-reforged-$releaseVersion.jar")
-                val transform = tasks.register<Exec>("map${runName.replaceFirstChar { it.uppercase() }}AccessTransformers") {
-                    dependsOn(mapped)
-                    inputs.file(mapped.flatMap { it.output })
-                    inputs.file(minecraft.getDependency(project.name).toSrgFile)
-                    inputs.file(rootProject.file("../gradle/remap-access-transformers.py"))
-                    outputs.file(candidate)
-                    doFirst {
-                        commandLine("python", rootProject.file("../gradle/remap-access-transformers.py"), mapped.get().output.get().asFile, candidate.get().asFile, minecraft.getDependency(project.name).toSrgFile.get(), "--reverse")
-                    }
-                }
-                transform.map { candidate.get() }
-            } else actualJar
-            tasks.named<JavaExec>(runName) {
-                dependsOn("jarJar", qaModJar, files(launchJar))
-                val artifactTarget = findProperty("artifact.target")?.toString() ?: project.name
-                if (artifactTarget != project.name && !providers.gradleProperty("qaJar").isPresent) dependsOn("buildAndCollect")
-                doFirst {
-                    val runDirectory = layout.projectDirectory.dir("run").asFile
-                    runDirectory.mkdirs()
-                    if (srgRuntime) {
-                        val mods = runDirectory.resolve("mods")
-                        mods.mkdirs()
-                        launchJar.get().asFile.copyTo(mods.resolve("yacl-reforged-library.jar"), overwrite = true)
-                        qaModJar.get().archiveFile.get().asFile.copyTo(mods.resolve("yacl-reforged-testmod.jar"), overwrite = true)
-                    }
-                    if (automaticQA) {
-                        runDirectory.resolve(resultName).delete()
-                        runDirectory.resolve(checksumName).delete()
-                        val options = runDirectory.resolve("options.txt")
-                        val settings = if (options.exists()) options.readText() else ""
-                        options.writeText(settings.replace(Regex("(?m)^onboardAccessibility:.*$"), "onboardAccessibility:false").let { if (it.contains("onboardAccessibility:")) it else it + "\nonboardAccessibility:false\n" })
-                    }
-                }
-                if (automaticQA) doLast {
-                    val runDirectory = layout.projectDirectory.dir("run").asFile
-                    val result = runDirectory.resolve(resultName)
-                    check(result.exists() && result.readLines().firstOrNull() == "PASS") { "Packaged QA failed: ${if (result.exists()) result.readText() else "missing result"}" }
-                    val digest = MessageDigest.getInstance("SHA-256").digest(actualJar.get().asFile.readBytes()).joinToString("") { "%02x".format(it) }
-                    runDirectory.resolve(checksumName).writeText(digest)
-                }
-                val embeddedLibraries = bundledRuntime.resolvedConfiguration.firstLevelModuleDependencies.flatMap { it.moduleArtifacts }.map { it.file }.toSet()
-                classpath = files(classpath.filter { it !in sourceSets.main.get().output.files && it !in testmod.output.files && it !in embeddedLibraries && !it.name.startsWith("kotlin-stdlib-") && !it.name.startsWith("kotlin-reflect-") }, qaModJar.flatMap { it.archiveFile }, launchJar)
-                val actualRuntime = javaClass.getMethod("getRuntimeClasspath").apply { isAccessible = true }.invoke(this) as ConfigurableFileCollection
-                actualRuntime.setFrom(testmod.runtimeClasspath.filter { it !in sourceSets.main.get().output.files && it !in testmod.output.files && it !in embeddedLibraries && !it.name.startsWith("kotlin-stdlib-") && !it.name.startsWith("kotlin-reflect-") }, qaModJar.flatMap { it.archiveFile }, launchJar)
             }
         }
     }
