@@ -1,14 +1,15 @@
 package dev.isxander.yacl3.gui.controllers;
 
 import dev.isxander.yacl3.gui.YACLScreen;
-import dev.isxander.yacl3.gui.utils.GuiUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
-import net.minecraft.client.input.CharacterEvent;
+//? if >=1.21.9 {
+/*import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import org.jspecify.annotations.NonNull;
+*///?}
 
 public class PopupControllerScreen extends Screen {
     private final YACLScreen backgroundYaclScreen;
@@ -32,32 +33,45 @@ public class PopupControllerScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        controllerPopup.extractBackground(graphics, mouseX, mouseY, a);
-        this.backgroundYaclScreen.extractRenderState(graphics, -1, -1, a); // mouseX/Y set to -1 to prevent hovering outlines
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        controllerPopup.renderBackground(graphics, mouseX, mouseY, delta);
+        this.backgroundYaclScreen.render(graphics, -1, -1, delta); //mouseX/Y set to -1 to prevent hovering outlines
 
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+        super.render(graphics, mouseX, mouseY, delta);
     }
 
     @Override
-    public void extractBackground(
-            GuiGraphicsExtractor guiGraphics,
+    public void renderBackground(
+            GuiGraphics guiGraphics,
             int mouseX,
             int mouseY,
             float partialTick
     ) {
-        this.backgroundYaclScreen.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
+        // in 1.21.6+ renderBackground isn't called in render, it's called earlier before the blur pass
+        //? if >=1.21.6
+        this.backgroundYaclScreen.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
     }
 
 
-    @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (!super.mouseClicked(event, doubleClick)) {
+    //? if >=1.21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
+        if (!super.mouseClicked(mouseButtonEvent, bl)) {
             this.onClose();
             return false;
         }
         return true;
     }
+    *///?} else {
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!super.mouseClicked(mouseX, mouseY, button)) {
+            this.onClose();
+            return false;
+        }
+        return true;
+    }
+    //?}
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
@@ -73,15 +87,30 @@ public class PopupControllerScreen extends Screen {
         controllerPopup.mouseMoved(mouseX, mouseY);
     }
 
-    @Override
-    public boolean charTyped(@NonNull CharacterEvent characterEvent) {
+    //? if >=1.21.9 {
+    /*@Override
+    public boolean charTyped(CharacterEvent characterEvent) {
         return controllerPopup.charTyped(characterEvent);
     }
-
+    *///?} else {
     @Override
-    public boolean keyPressed(@NonNull KeyEvent keyEvent) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        return controllerPopup.charTyped(codePoint, modifiers);
+    }
+    //?}
+
+
+    //? if >=1.21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent keyEvent) {
         return controllerPopup.keyPressed(keyEvent);
     }
+    *///?} else {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return controllerPopup.keyPressed(keyCode, scanCode, modifiers);
+    }
+    //?}
 
     @Override
     public void tick() {
@@ -91,7 +120,7 @@ public class PopupControllerScreen extends Screen {
 
     @Override
     public void onClose() {
-        GuiUtils.setScreen(backgroundYaclScreen, true);
+        this.minecraft.screen = backgroundYaclScreen;
         this.controllerPopup.close();
     }
 
