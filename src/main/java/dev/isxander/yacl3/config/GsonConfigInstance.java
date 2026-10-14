@@ -1,14 +1,12 @@
 package dev.isxander.yacl3.config;
 
 import com.google.gson.*;
-import dev.isxander.yacl3.config.util.CodecSerializerAdapter;
 import dev.isxander.yacl3.config.v2.impl.serializer.GsonConfigSerializer;
 import dev.isxander.yacl3.gui.utils.ItemRegistryHelper;
 import dev.isxander.yacl3.impl.utils.YACLConstants;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.Item;
 
@@ -33,7 +31,7 @@ import java.util.function.UnaryOperator;
  * {@code
  * public class MyConfig {
  *     public static ConfigClassHandler<MyConfig> HANDLER = ConfigClassHandler.createBuilder(MyConfig.class)
- *             .id(new Identifier("modid", "config"))
+ *             .id(new ResourceLocation("modid", "config"))
  *             .serializer(config -> GsonConfigSerializerBuilder.create(config)
  *                     .setPath(FabricLoader.getInstance().getConfigDir().resolve("my_mod.json")
  *                     .build())
@@ -70,8 +68,14 @@ public class GsonConfigInstance<T> extends ConfigInstance<T> {
         this.path = path;
         this.gson = builder
                 .setExclusionStrategies(new ConfigExclusionStrategy())
-                .registerTypeHierarchyAdapter(Component.class, new CodecSerializerAdapter<>(ComponentSerialization.CODEC))
-                .registerTypeHierarchyAdapter(Style.class, new GsonConfigSerializer.StyleTypeAdapter())
+                /*? if >1.20.4 {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter(RegistryAccess.EMPTY))
+                *//*?} elif >=1.20.3 {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter())
+                *//*?} else {*/
+                .registerTypeHierarchyAdapter(Component.class, new Component.Serializer())
+                /*?}*/
+                .registerTypeHierarchyAdapter(Style.class, /*? if >=1.20.3 {*//*new GsonConfigSerializer.StyleTypeAdapter()*//*?} else {*/new Style.Serializer()/*?}*/)
                 .registerTypeHierarchyAdapter(Color.class, new ColorTypeAdapter())
                 .registerTypeHierarchyAdapter(Item.class, new ItemTypeAdapter())
                 .serializeNulls()
@@ -165,8 +169,14 @@ public class GsonConfigInstance<T> extends ConfigInstance<T> {
         private UnaryOperator<GsonBuilder> gsonBuilder = builder -> builder
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .serializeNulls()
-                .registerTypeHierarchyAdapter(Component.class, new CodecSerializerAdapter<>(ComponentSerialization.CODEC))
-                .registerTypeHierarchyAdapter(Style.class, new GsonConfigSerializer.StyleTypeAdapter())
+                /*? if >1.20.4 {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter(RegistryAccess.EMPTY))
+                *//*?} elif >=1.20.3 {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter())
+                *//*?} else {*/
+                .registerTypeHierarchyAdapter(Component.class, new Component.Serializer())
+                /*?}*/
+                .registerTypeHierarchyAdapter(Style.class, /*? if >=1.20.3 {*//*new GsonConfigSerializer.StyleTypeAdapter()*//*?} else {*/new Style.Serializer()/*?}*/)
                 .registerTypeHierarchyAdapter(Color.class, new ColorTypeAdapter())
                 .registerTypeHierarchyAdapter(Item.class, new ItemTypeAdapter());
 

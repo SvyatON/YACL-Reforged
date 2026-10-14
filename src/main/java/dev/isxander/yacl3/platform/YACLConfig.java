@@ -13,9 +13,6 @@ public class YACLConfig {
                     .build())
             .build();
 
-    @SerialEntry(comment = "Show the flashing colour picker hint (auto disables after first use)")
+    @SerialEntry
     public boolean showColorPickerIndicator = true;
-
-    @SerialEntry(comment = "Load .webp and .gif during Minecraft resource reload instead of on-demand (can decrease startup time)")
-    public boolean preloadComplexImageFormats = false;
 }

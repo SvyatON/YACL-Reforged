@@ -5,13 +5,16 @@ import dev.isxander.yacl3.api.Option;
 /**
  * A custom text field implementation for strings.
  */
-public record StringController(Option<String> option) implements IStringController<String> {
+public class StringController implements IStringController<String> {
+    private final Option<String> option;
+
     /**
      * Constructs a string controller
      *
      * @param option bound option
      */
-    public StringController {
+    public StringController(Option<String> option) {
+        this.option = option;
     }
 
     /**

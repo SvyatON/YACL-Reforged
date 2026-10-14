@@ -1,9 +1,9 @@
 package dev.isxander.yacl3.gui.image;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 
 public interface ImageRenderer {
-    int render(GuiGraphicsExtractor graphics, int x, int y, int renderWidth, float tickDelta);
+    int render(GuiGraphics graphics, int x, int y, int renderWidth, float tickDelta);
 
     void close();
 

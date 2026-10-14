@@ -17,8 +17,16 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 @ApiStatus.Internal
-public record PlaceholderCategoryImpl(Component name, BiFunction<Minecraft, YACLScreen, Screen> screen,
-                                      Component tooltip) implements PlaceholderCategory {
+public final class PlaceholderCategoryImpl implements PlaceholderCategory {
+    private final Component name;
+    private final BiFunction<Minecraft, YACLScreen, Screen> screen;
+    private final Component tooltip;
+
+    public PlaceholderCategoryImpl(Component name, BiFunction<Minecraft, YACLScreen, Screen> screen, Component tooltip) {
+        this.name = name;
+        this.screen = screen;
+        this.tooltip = tooltip;
+    }
 
     @Override
     public @NotNull ImmutableList<OptionGroup> groups() {
@@ -28,6 +36,11 @@ public record PlaceholderCategoryImpl(Component name, BiFunction<Minecraft, YACL
     @Override
     public @NotNull Component name() {
         return name;
+    }
+
+    @Override
+    public BiFunction<Minecraft, YACLScreen, Screen> screen() {
+        return screen;
     }
 
     @Override
