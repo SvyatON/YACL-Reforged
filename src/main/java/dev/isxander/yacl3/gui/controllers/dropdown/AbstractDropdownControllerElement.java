@@ -6,12 +6,9 @@ import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.string.StringControllerElement;
 import dev.isxander.yacl3.gui.utils.GuiUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -45,17 +42,17 @@ public abstract class AbstractDropdownControllerElement<T, U> extends StringCont
 		}
 	}
 
-    @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (super.mouseClicked(event, doubleClick)) {
-            if (!dropdownVisible) {
-                createDropdownWidget();
-                doSelectAll();
-            }
-            return true;
-        }
-        return false;
-    }
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		if (super.mouseClicked(mouseX, mouseY, button)) {
+			if (!dropdownVisible) {
+				createDropdownWidget();
+				doSelectAll();
+			}
+			return true;
+		}
+		return false;
+	}
 
 	@Override
 	public void setFocused(boolean focused) {
@@ -73,48 +70,48 @@ public abstract class AbstractDropdownControllerElement<T, U> extends StringCont
 		super.unfocus();
 	}
 
-    @Override
-    public boolean keyPressed(@NonNull KeyEvent event) {
-        if (!inputFieldFocused)
-            return false;
-        if (dropdownVisible) {
-            switch (event.key()) {
-                case InputConstants.KEY_DOWN -> {
-                    dropdownWidget.selectNextEntry();
-                    return true;
-                }
-                case InputConstants.KEY_UP -> {
-                    dropdownWidget.selectPreviousEntry();
-                    return true;
-                }
-                case InputConstants.KEY_TAB -> {
-                    if (event.hasShiftDown()) {
-                        dropdownWidget.selectPreviousEntry();
-                    } else {
-                        dropdownWidget.selectNextEntry();
-                    }
-                    return true;
-                }
-            }
-        } else {
-            if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
-                createDropdownWidget();
-                return true;
-            }
-        }
-        return super.keyPressed(event);
-    }
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (!inputFieldFocused)
+			return false;
+		if (dropdownVisible) {
+			switch (keyCode) {
+				case InputConstants.KEY_DOWN -> {
+					dropdownWidget.selectNextEntry();
+					return true;
+				}
+				case InputConstants.KEY_UP -> {
+					dropdownWidget.selectPreviousEntry();
+					return true;
+				}
+				case InputConstants.KEY_TAB -> {
+					if (Screen.hasShiftDown()) {
+						dropdownWidget.selectPreviousEntry();
+					} else {
+						dropdownWidget.selectNextEntry();
+					}
+					return true;
+				}
+			}
+		} else {
+			if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
+				createDropdownWidget();
+				return true;
+			}
+		}
+		return super.keyPressed(keyCode, scanCode, modifiers);
+	}
 
-    @Override
-    public boolean charTyped(@NonNull CharacterEvent event) {
-        if (!inputFieldFocused) {
-            return false;
-        }
-        if (!dropdownVisible) {
-            createDropdownWidget();
-        }
-        return super.charTyped(event);
-    }
+	@Override
+	public boolean charTyped(char chr, int modifiers) {
+		if (!inputFieldFocused) {
+			return false;
+		}
+		if (!dropdownVisible) {
+			createDropdownWidget();
+		}
+		return super.charTyped(chr, modifiers);
+	}
 
 	@Override
 	protected int getValueColor() {
@@ -142,16 +139,16 @@ public abstract class AbstractDropdownControllerElement<T, U> extends StringCont
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 		if (matchingValues == null) matchingValues = computeMatchingValues();
 
-		super.extractRenderState(graphics, mouseX, mouseY, a);
+		super.render(graphics, mouseX, mouseY, delta);
 	}
 
-	void extractDropdownEntry(GuiGraphicsExtractor graphics, Dimension<Integer> entryDimension, int index) {
-		extractDropdownEntry(graphics, entryDimension, matchingValues.get(index));
+	void renderDropdownEntry(GuiGraphics graphics, Dimension<Integer> entryDimension, int index) {
+		renderDropdownEntry(graphics, entryDimension, matchingValues.get(index));
 	}
-	protected void extractDropdownEntry(GuiGraphicsExtractor graphics, Dimension<Integer> entryDimension, U value) {
+	protected void renderDropdownEntry(GuiGraphics graphics, Dimension<Integer> entryDimension, U value) {
 		String entry = getString(value);
 		Component text;
 		if (entry.isBlank()) {
@@ -159,7 +156,7 @@ public abstract class AbstractDropdownControllerElement<T, U> extends StringCont
 		} else {
 			text = shortenString(entry);
 		}
-		graphics.text(
+		graphics.drawString(
 				textRenderer,
 				text,
 				entryDimension.xLimit() - textRenderer.width(text) - getDropdownEntryPadding(),

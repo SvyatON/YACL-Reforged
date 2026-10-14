@@ -2,7 +2,6 @@ package dev.isxander.yacl3.config.v2.impl.serializer;
 
 import com.google.gson.*;
 import com.mojang.serialization.JsonOps;
-import dev.isxander.yacl3.config.util.CodecSerializerAdapter;
 import dev.isxander.yacl3.config.v2.api.*;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import dev.isxander.yacl3.gui.utils.ItemRegistryHelper;
@@ -11,7 +10,6 @@ import dev.isxander.yacl3.platform.YACLPlatform;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.ApiStatus;
@@ -177,6 +175,7 @@ public class GsonConfigSerializer<T> extends ConfigSerializer<T> {
         config.load();
     }
 
+    /*? if >=1.20.3 {*/
     public static class StyleTypeAdapter implements JsonSerializer<Style>, JsonDeserializer<Style> {
         @Override
         public Style deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -188,6 +187,7 @@ public class GsonConfigSerializer<T> extends ConfigSerializer<T> {
             return Style.Serializer.CODEC.encodeStart(JsonOps.INSTANCE, src).result().orElse(JsonNull.INSTANCE);
         }
     }
+    /*?}*/
 
     public static class ColorTypeAdapter implements JsonSerializer<Color>, JsonDeserializer<Color> {
         @Override
@@ -221,8 +221,14 @@ public class GsonConfigSerializer<T> extends ConfigSerializer<T> {
         private UnaryOperator<GsonBuilder> gsonBuilder = builder -> builder
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .serializeNulls()
-                .registerTypeHierarchyAdapter(Component.class, new CodecSerializerAdapter<>(ComponentSerialization.CODEC))
-                .registerTypeHierarchyAdapter(Style.class, new StyleTypeAdapter())
+                /*? if >1.20.4 {*/
+                .registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter(RegistryAccess.EMPTY))
+                /*?} elif >=1.20.3 {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.SerializerAdapter())
+                *//*?} else {*/
+                /*.registerTypeHierarchyAdapter(Component.class, new Component.Serializer())
+                *//*?}*/
+                .registerTypeHierarchyAdapter(Style.class, /*? if >=1.20.3 {*/new StyleTypeAdapter()/*?} else {*//*new Style.Serializer()*//*?}*/)
                 .registerTypeHierarchyAdapter(Color.class, new ColorTypeAdapter())
                 .registerTypeHierarchyAdapter(Item.class, new ItemTypeAdapter())
                 .setPrettyPrinting();

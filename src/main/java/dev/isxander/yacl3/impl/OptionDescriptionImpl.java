@@ -1,7 +1,6 @@
 package dev.isxander.yacl3.impl;
 
 import dev.isxander.yacl3.api.OptionDescription;
-import dev.isxander.yacl3.debug.DebugProperties;
 import dev.isxander.yacl3.gui.image.ImageRenderer;
 import dev.isxander.yacl3.gui.image.ImageRendererManager;
 import dev.isxander.yacl3.gui.image.impl.AnimatedDynamicTextureImage;
@@ -9,7 +8,7 @@ import dev.isxander.yacl3.gui.image.impl.DynamicTextureImage;
 import dev.isxander.yacl3.gui.image.impl.ResourceTextureImage;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
 
 import java.nio.file.Path;
@@ -35,7 +34,7 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder image(Identifier image, int width, int height) {
+        public Builder image(ResourceLocation image, int width, int height) {
             Validate.isTrue(imageUnset, "Image already set!");
             Validate.isTrue(width > 0, "Width must be greater than 0!");
             Validate.isTrue(height > 0, "Height must be greater than 0!");
@@ -46,7 +45,7 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder image(Identifier image, float u, float v, int width, int height, int textureWidth, int textureHeight) {
+        public Builder image(ResourceLocation image, float u, float v, int width, int height, int textureWidth, int textureHeight) {
             Validate.isTrue(imageUnset, "Image already set!");
             Validate.isTrue(width > 0, "Width must be greater than 0!");
             Validate.isTrue(height > 0, "Height must be greater than 0!");
@@ -57,16 +56,16 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder image(Path path, Identifier uniqueLocation) {
+        public Builder image(Path path, ResourceLocation uniqueLocation) {
             Validate.isTrue(imageUnset, "Image already set!");
 
-            this.image = ImageRendererManager.registerOrGetImage(uniqueLocation, () -> DynamicTextureImage.fromPath(path, uniqueLocation, DebugProperties.IMAGE_FILTERING)).thenApply(Optional::of);
+            this.image = ImageRendererManager.registerOrGetImage(uniqueLocation, () -> DynamicTextureImage.fromPath(path, uniqueLocation)).thenApply(Optional::of);
             imageUnset = false;
             return this;
         }
 
         @Override
-        public Builder gifImage(Identifier image) {
+        public Builder gifImage(ResourceLocation image) {
             Validate.isTrue(imageUnset, "Image already set!");
 
             this.image = ImageRendererManager.registerOrGetImage(image, () -> AnimatedDynamicTextureImage.createGIFFromTexture(image)).thenApply(Optional::of);
@@ -75,7 +74,7 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder gifImage(Path path, Identifier uniqueLocation) {
+        public Builder gifImage(Path path, ResourceLocation uniqueLocation) {
             Validate.isTrue(imageUnset, "Image already set!");
 
             this.image = ImageRendererManager.registerOrGetImage(uniqueLocation, () -> AnimatedDynamicTextureImage.createGIFFromPath(path, uniqueLocation)).thenApply(Optional::of);
@@ -84,7 +83,7 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder webpImage(Identifier image) {
+        public Builder webpImage(ResourceLocation image) {
             Validate.isTrue(imageUnset, "Image already set!");
 
             this.image = ImageRendererManager.registerOrGetImage(image, () -> AnimatedDynamicTextureImage.createWEBPFromTexture(image)).thenApply(Optional::of);
@@ -94,7 +93,7 @@ public record OptionDescriptionImpl(Component text, CompletableFuture<Optional<I
         }
 
         @Override
-        public Builder webpImage(Path path, Identifier uniqueLocation) {
+        public Builder webpImage(Path path, ResourceLocation uniqueLocation) {
             Validate.isTrue(imageUnset, "Image already set!");
 
             this.image = ImageRendererManager.registerOrGetImage(uniqueLocation, () -> AnimatedDynamicTextureImage.createWEBPFromPath(path, uniqueLocation)).thenApply(Optional::of);

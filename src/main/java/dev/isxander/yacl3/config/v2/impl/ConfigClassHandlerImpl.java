@@ -10,9 +10,8 @@ import dev.isxander.yacl3.config.v2.impl.autogen.OptionAccessImpl;
 import dev.isxander.yacl3.config.v2.impl.autogen.YACLAutoGenException;
 import dev.isxander.yacl3.impl.utils.YACLConstants;
 import dev.isxander.yacl3.platform.YACLPlatform;
-import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.Validate;
 
 import java.lang.reflect.Constructor;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
     private final Class<T> configClass;
-    private final Identifier id;
+    private final ResourceLocation id;
     private final boolean supportsAutoGen;
     private final ConfigSerializer<T> serializer;
     private final ConfigFieldImpl<?>[] fields;
@@ -35,7 +34,7 @@ public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
     private final T defaults;
     private final Constructor<T> noArgsConstructor;
 
-    public ConfigClassHandlerImpl(Class<T> configClass, Identifier id, Function<ConfigClassHandler<T>, ConfigSerializer<T>> serializerFactory) {
+    public ConfigClassHandlerImpl(Class<T> configClass, ResourceLocation id, Function<ConfigClassHandler<T>, ConfigSerializer<T>> serializerFactory) {
         this.configClass = configClass;
         this.id = id;
         this.supportsAutoGen = id != null && YACLPlatform.getEnvironment().isClient();
@@ -99,7 +98,7 @@ public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
     }
 
     @Override
-    public Identifier id() {
+    public ResourceLocation id() {
         return this.id;
     }
 
@@ -135,14 +134,8 @@ public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
                 OptionAddable group = groups.groups().computeIfAbsent(autoGen.group().orElse(""), k -> {
                     if (k.isEmpty())
                         return groups.category();
-                    String groupKey = "yacl3.config.%s.category.%s.group.%s".formatted(id().toString(), autoGen.category(), k);
-                    OptionGroup.Builder groupBuilder = OptionGroup.createBuilder()
-                            .name(Component.translatable(groupKey));
-                    String descriptionKey = groupKey + ".desc";
-                    if (Language.getInstance().has(descriptionKey)) {
-                        groupBuilder.description(OptionDescription.of(Component.translatable(descriptionKey)));
-                    }
-                    return groupBuilder;
+                    return OptionGroup.createBuilder()
+                            .name(Component.translatable("yacl3.config.%s.category.%s.group.%s".formatted(id().toString(), autoGen.category(), k)));
                 });
 
                 Option<?> option;
@@ -251,7 +244,7 @@ public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
 
     public static class BuilderImpl<T> implements Builder<T> {
         private final Class<T> configClass;
-        private Identifier id;
+        private ResourceLocation id;
         private Function<ConfigClassHandler<T>, ConfigSerializer<T>> serializerFactory;
 
         public BuilderImpl(Class<T> configClass) {
@@ -259,7 +252,7 @@ public class ConfigClassHandlerImpl<T> implements ConfigClassHandler<T> {
         }
 
         @Override
-        public Builder<T> id(Identifier id) {
+        public Builder<T> id(ResourceLocation id) {
             this.id = id;
             return this;
         }

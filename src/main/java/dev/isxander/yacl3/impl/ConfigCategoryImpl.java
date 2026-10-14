@@ -15,8 +15,16 @@ import java.util.Collection;
 import java.util.List;
 
 @ApiStatus.Internal
-public record ConfigCategoryImpl(Component name, ImmutableList<OptionGroup> groups,
-                                 Component tooltip) implements ConfigCategory {
+public final class ConfigCategoryImpl implements ConfigCategory {
+    private final Component name;
+    private final ImmutableList<OptionGroup> groups;
+    private final Component tooltip;
+
+    public ConfigCategoryImpl(Component name, ImmutableList<OptionGroup> groups, Component tooltip) {
+        this.name = name;
+        this.groups = groups;
+        this.tooltip = tooltip;
+    }
 
     @Override
     public @NotNull Component name() {
@@ -143,13 +151,13 @@ public record ConfigCategoryImpl(Component name, ImmutableList<OptionGroup> grou
 
             @Override
             public OptionGroup.Builder option(@NotNull Option<?> option) {
-                BuilderImpl.this.option(option);
+                ConfigCategoryImpl.BuilderImpl.this.option(option);
                 return this;
             }
 
             @Override
             public OptionGroup.Builder options(@NotNull Collection<? extends Option<?>> options) {
-                BuilderImpl.this.options(options);
+                ConfigCategoryImpl.BuilderImpl.this.options(options);
                 return this;
             }
 

@@ -14,7 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
@@ -91,7 +91,7 @@ public abstract class SimpleOptionFactory<A extends Annotation, T> implements Op
                 builder.customImage(imageFactory.createImage(value, field, storage).thenApply(Optional::of));
             } else if (!imageOverride.value().isEmpty()) {
                 String path = imageOverride.value();
-                Identifier imageLocation = YACLPlatform.rl(field.parent().id().getNamespace(), path);
+                ResourceLocation imageLocation = YACLPlatform.rl(field.parent().id().getNamespace(), path);
                 String extension = path.substring(path.lastIndexOf('.') + 1);
 
                 switch (extension) {
@@ -106,7 +106,7 @@ public abstract class SimpleOptionFactory<A extends Annotation, T> implements Op
         } else {
             String imagePath = "textures/yacl3/" + field.parent().id().getPath() + "/" + field.access().name() + ".webp";
             imagePath = imagePath.toLowerCase().replaceAll("[^a-z0-9/._:-]", "_");
-            Identifier imageLocation = YACLPlatform.rl(field.parent().id().getNamespace(), imagePath);
+            ResourceLocation imageLocation = YACLPlatform.rl(field.parent().id().getNamespace(), imagePath);
             if (Minecraft.getInstance().getResourceManager().getResource(imageLocation).isPresent()) {
                 builder.webpImage(imageLocation);
             }

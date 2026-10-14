@@ -1,25 +1,27 @@
 package dev.isxander.yacl3.gui.controllers;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.api.utils.MutableDimension;
 import dev.isxander.yacl3.gui.YACLScreen;
-import dev.isxander.yacl3.gui.render.ColorGradientRenderState;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
+import dev.isxander.yacl3.gui.utils.YACLRenderHelper;
 import dev.isxander.yacl3.platform.YACLPlatform;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
 public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
-    public static final Identifier COLOR_PICKER_SPRITE = YACLPlatform.rl("controller/colorpicker");
-    public static final Identifier TRANSPARENT_SPRITE = YACLPlatform.rl("controller/transparent");
+    /*? if >1.20.1 {*/
+    private static final ResourceLocation COLOR_PICKER_LOCATION = YACLPlatform.rl("controller/colorpicker");
+    private static final ResourceLocation TRANSPARENT_TEXTURE_LOCATION = YACLPlatform.rl("controller/transparent");
+    /*?} else {*/
+    /*// nineslice and repeating only work on a 256x atlas
+    private static final ResourceLocation COLOR_PICKER_ATLAS = YACLPlatform.rl("textures/gui/colorpicker-atlas.png");
+    *//*?}*/
 
     private final ColorController controller;
     private final ColorController.ColorControllerElement entryWidget;
@@ -78,39 +80,32 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         updateHSL();
 
         int thumbWidth = 4;
         int thumbHeight = 4;
 
-        graphics.pose().pushMatrix();
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 10); // render over text
 
         //Background
-        int x1 = colorPickerDim.x() - 5;
-        int y1 = colorPickerDim.y() - 5;
-        int width1 = colorPickerDim.width() + 10;
-        graphics.blitSprite(
-                RenderPipelines.GUI_TEXTURED,
-                COLOR_PICKER_SPRITE,
-                x1, y1,
-                width1, colorPickerDim.height() + 10
-        );
+        /*? if >1.20.1 {*/
+        GuiUtils.blitSprite(graphics, COLOR_PICKER_LOCATION, colorPickerDim.x() - 5, colorPickerDim.y() - 5, colorPickerDim.width() + 10, colorPickerDim.height() + 10);
+        /*?} else {*/
+        /*graphics.blitNineSliced(COLOR_PICKER_ATLAS, colorPickerDim.x() - 5, colorPickerDim.y() - 5, colorPickerDim.width() + 10, colorPickerDim.height() + 10, 3, 236, 34, 0, 0);
+        *//*?}*/
 
         //Main color preview
         //outline
         graphics.fill(previewColorDim.x() - outline, previewColorDim.y() - outline, previewColorDim.xLimit() + outline, previewColorDim.yLimit() + outline, Color.black.getRGB());
         //transparent texture - must be rendered BEFORE the main color preview
         if(controller.allowAlpha()) {
-            int x = previewColorDim.x();
-            int y = previewColorDim.y();
-            int width = previewColorDim.width();
-            graphics.blitSprite(
-                    RenderPipelines.GUI_TEXTURED,
-                    TRANSPARENT_SPRITE,
-                    x, y,
-                    width, previewColorDim.height()
-            );
+            /*? if >1.20.1 {*/
+            GuiUtils.blitSprite(graphics, TRANSPARENT_TEXTURE_LOCATION, previewColorDim.x(), previewColorDim.y(), previewColorDim.width(), previewColorDim.height());
+            /*?} else {*/
+            /*graphics.blitRepeating(COLOR_PICKER_ATLAS, previewColorDim.x(), previewColorDim.y(), previewColorDim.width(), previewColorDim.height(), 236, 0, 8, 8);
+            *//*?}*/
         }
         //main color preview
         graphics.fill(previewColorDim.x(), previewColorDim.y(), previewColorDim.xLimit(), previewColorDim.yLimit(), controller.option().pendingValue().getRGB());
@@ -119,12 +114,9 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
         //outline
         graphics.fill(saturationLightDim.x() - outline, saturationLightDim.y() - outline, saturationLightDim.xLimit() + outline, saturationLightDim.yLimit() + outline, Color.black.getRGB());
         //White to pending color's RGB from hue, left to right
-        ColorGradientRenderState.createHorizontal(
-                graphics,
-                saturationLightDim.x(), saturationLightDim.y(),
-                saturationLightDim.xLimit(), saturationLightDim.yLimit(),
-                0xFFFFFFFF, ((int) getRgbFromHueX() & 0x00FFFFFF) | 0xFF000000
-        ).submit(graphics);
+        GuiUtils.drawSpecial(graphics, bufferSource -> {
+            fillSidewaysGradient(graphics, saturationLightDim.x(), saturationLightDim.y(), saturationLightDim.xLimit(), saturationLightDim.yLimit(), 0xFFFFFFFF, (int) getRgbFromHueX(), bufferSource.getBuffer(RenderType.gui()));
+        });
         //Transparent to black, top to bottom
         graphics.fillGradient(saturationLightDim.x(), saturationLightDim.y(), saturationLightDim.xLimit(), saturationLightDim.yLimit(), 0x00000000, 0xFF000000);
         //Sat/light thumb shadow
@@ -142,54 +134,37 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
         //Hue slider thumb
         graphics.fill(hueThumbX - thumbWidth / 2, hueGradientDim.y() - outline, hueThumbX + thumbWidth / 2, hueGradientDim.yLimit() + outline, -1);
 
-        if (controller.allowAlpha()) {
+        if(controller.allowAlpha()) {
             //outline
             graphics.fill(alphaGradientDim.x() - outline, alphaGradientDim.y() - outline, alphaGradientDim.xLimit() + outline, alphaGradientDim.yLimit() + outline, Color.black.getRGB());
             //Transparent texture
-            int x = alphaGradientDim.x();
-            int y = alphaGradientDim.y();
-            int width = alphaGradientDim.width();
-            graphics.blitSprite(
-                    RenderPipelines.GUI_TEXTURED,
-                    TRANSPARENT_SPRITE,
-                    x, y,
-                    width, sliderHeight
-            );
-
+            /*? if >1.20.1 {*/
+            GuiUtils.blitSprite(graphics, TRANSPARENT_TEXTURE_LOCATION, alphaGradientDim.x(), alphaGradientDim.y(), alphaGradientDim.width(), sliderHeight);
+            /*?} else {*/
+            /*graphics.blitRepeating(COLOR_PICKER_ATLAS, alphaGradientDim.x(), alphaGradientDim.y(), alphaGradientDim.width(), sliderHeight, 236, 0, 8, 8);
+            *//*?}*/
             //Pending color to transparent
-            ColorGradientRenderState.createHorizontal(
-                    graphics,
-                    alphaGradientDim.x(), alphaGradientDim.y(),
-                    alphaGradientDim.xLimit(), alphaGradientDim.yLimit(),
-                    (getRgbWithoutAlpha() & 0x00FFFFFF) | 0xFF000000, 0x00000000
-            ).submit(graphics);
+            GuiUtils.drawSpecial(graphics, bufferSource -> {
+                fillSidewaysGradient(graphics, alphaGradientDim.x(), alphaGradientDim.y(), alphaGradientDim.xLimit(), alphaGradientDim.yLimit(), getRgbWithoutAlpha(), 0x00000000, bufferSource.getBuffer(RenderType.gui()));
+            });
             //Alpha slider thumb shadow
             graphics.fill(alphaThumbX - thumbWidth / 2 - 1, alphaGradientDim.y() - outline - 1, alphaThumbX + thumbWidth / 2 + 1, alphaGradientDim.yLimit() + outline + 1, 0xFF404040);
             //Alpha slider thumb
             graphics.fill(alphaThumbX - thumbWidth / 2, alphaGradientDim.y() - outline, alphaThumbX + thumbWidth / 2, alphaGradientDim.yLimit() + outline, -1);
         }
 
-        graphics.pose().popMatrix();
+        //graphics.blitRepeating(COLOR_PICKER_ATLAS, colorPickerDim.x(), colorPickerDim.y(), colorPickerDim.width(), colorPickerDim.height(), 237, 0, 4, 4);
 
-        if (isHoveringHueSlider(mouseX, mouseY)) {
-            graphics.requestCursor(CursorTypes.RESIZE_EW);
-        } else if (isHoveringAlphaSlider(mouseX, mouseY)) {
-            graphics.requestCursor(CursorTypes.RESIZE_EW);
-        } else if (isHoveringSatLightGradient(mouseX, mouseY)) {
-            graphics.requestCursor(CursorTypes.CROSSHAIR);
-        }
-    }
-
-    private boolean isHoveringHueSlider(double mouseX, double mouseY) {
-        return mouseY >= hueGradientDim.y() && mouseY <= hueGradientDim.yLimit()
-                && mouseX >= hueGradientDim.x() && mouseX <= hueGradientDim.xLimit();
+        graphics.pose().popPose();
     }
 
     public boolean clickedHueSlider(double mouseX, double mouseY) {
         if (satLightGradientDown || alphaSliderDown) return false;
 
-        if (this.isHoveringHueSlider(mouseX, mouseY)) {
-            hueSliderDown = true;
+        if (mouseY >= hueGradientDim.y() && mouseY <= hueGradientDim.yLimit()) {
+            if (mouseX >= hueGradientDim.x() && mouseX <= hueGradientDim.xLimit()) {
+                hueSliderDown = true;
+            }
         }
 
         if (hueSliderDown) {
@@ -199,36 +174,29 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
         return hueSliderDown;
     }
 
-    private boolean isHoveringSatLightGradient(double mouseX, double mouseY) {
-        return mouseY >= saturationLightDim.y() && mouseY <= saturationLightDim.yLimit()
-                && mouseX >= saturationLightDim.x() && mouseX <= saturationLightDim.xLimit();
-    }
-
     public boolean clickedSatLightGradient(double mouseX, double mouseY) {
         if (hueSliderDown || alphaSliderDown) return false;
 
-        if (isHoveringSatLightGradient(mouseX, mouseY)) {
-            satLightGradientDown = true;
+        if (mouseX >= saturationLightDim.x() && mouseX <= saturationLightDim.xLimit()) {
+            if (mouseY >= saturationLightDim.y() && mouseY <= saturationLightDim.yLimit()) {
+                satLightGradientDown = true;
+            }
         }
 
-        if (satLightGradientDown) {
+        if(satLightGradientDown) {
             satLightThumbX = (int) Mth.clamp(mouseX, saturationLightDim.x(), saturationLightDim.xLimit());
         }
 
         return satLightGradientDown;
     }
 
-    private boolean isHoveringAlphaSlider(double mouseX, double mouseY) {
-        if (alphaGradientDim == null) return false;
-        return mouseY >= alphaGradientDim.y() && mouseY <= alphaGradientDim.yLimit()
-                && mouseX >= alphaGradientDim.x() && mouseX <= alphaGradientDim.xLimit();
-    }
-
     public boolean clickedAlphaSlider(double mouseX, double mouseY) {
         if (satLightGradientDown || hueSliderDown) return false;
 
-        if (isHoveringAlphaSlider(mouseX, mouseY)) {
-            alphaSliderDown = true;
+        if (mouseX >= alphaGradientDim.x() && mouseX <= alphaGradientDim.xLimit()) {
+            if (mouseY >= alphaGradientDim.y() && mouseY <= alphaGradientDim.yLimit()) {
+                alphaSliderDown = true;
+            }
         }
 
         if (alphaSliderDown) {
@@ -249,50 +217,51 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
     }
 
     @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (isMouseOver(event.x(), event.y())) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isMouseOver(mouseX, mouseY)) {
             mouseDown = true;
             hueSliderDown = false;
             satLightGradientDown = false;
             alphaSliderDown = false;
-            setColorFromMouseClick(event.x(), event.y());
+            setColorFromMouseClick(mouseX, mouseY);
             return true;
-        } else if (entryWidget.isMouseOver(event.x(), event.y())) {
-            return entryWidget.mouseClicked(event, doubleClick);
+        } else if (entryWidget.isMouseOver(mouseX, mouseY)) {
+            return entryWidget.mouseClicked(mouseX, mouseY, button);
         } else {
             close(); //removes color picker
             return false;
         }
     }
-
     @Override
-    public boolean mouseReleased(@NonNull MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         mouseDown = false;
         return false;
     }
-
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         //Checks if the mouse is either over the color picker or the color controller
         //The addition/subtraction of the outline and extra 3 pixels is to account for both the outline and the background
-        return mouseX >= colorPickerDim.x() - outline - 3 && mouseX <= colorPickerDim.xLimit() + outline + 3
-                && mouseY >= colorPickerDim.y() - outline - 3 && mouseY <= colorPickerDim.yLimit() + outline + 3;
-    }
-
-    @Override
-    public boolean mouseDragged(@NonNull MouseButtonEvent event, double dx, double dy) {
-        if (mouseDown || isMouseOver(event.x(), event.y())) {
-            setColorFromMouseClick(event.x(), event.y());
+        if (mouseX >= colorPickerDim.x() - outline - 3 && mouseX <= colorPickerDim.xLimit() + outline + 3
+                && mouseY >= colorPickerDim.y() - outline - 3 && mouseY <= colorPickerDim.yLimit() + outline + 3) {
             return true;
         }
-        return entryWidget.mouseDragged(event, dx, dy);
+        return false;
     }
 
     @Override
-    public boolean charTyped(@NonNull CharacterEvent event) {
-        // Done to allow for typing whilst the color picker is visible
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (mouseDown || isMouseOver(mouseX, mouseY)) {
+            setColorFromMouseClick(mouseX, mouseY);
+            return true;
+        }
+        return entryWidget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        //Done to allow for typing whilst the color picker is visible
         charTyped = true;
-        return entryWidget.charTyped(event);
+        return entryWidget.charTyped(chr, modifiers);
     }
 
     @Override
@@ -328,7 +297,7 @@ public class ColorPickerWidget extends ControllerPopupWidget<ColorController> {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         entryWidget.hoveredOverColorPreview = entryWidget.isMouseOverColorPreview(mouseX, mouseY);
     }
 

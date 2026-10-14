@@ -4,12 +4,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
-import dev.isxander.yacl3.gui.utils.KeyUtils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.NonNull;
 
 public class SliderControllerElement extends ControllerWidget<ISliderController<?>> {
     private final double min, max, interval;
@@ -29,14 +26,14 @@ public class SliderControllerElement extends ControllerWidget<ISliderController<
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.render(graphics, mouseX, mouseY, delta);
 
         calculateInterpolation();
     }
 
     @Override
-    protected void extractHoveredControl(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void drawHoveredControl(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         // track
         graphics.fill(sliderBounds.x(), sliderBounds.centerY() - 1, sliderBounds.xLimit(), sliderBounds.centerY(), -1);
         // track shadow
@@ -46,42 +43,34 @@ public class SliderControllerElement extends ControllerWidget<ISliderController<
         graphics.fill(getThumbX() - getThumbWidth() / 2 + 1, sliderBounds.y() + 1, getThumbX() + getThumbWidth() / 2 + 1, sliderBounds.yLimit() + 1, 0xFF404040);
         // thumb
         graphics.fill(getThumbX() - getThumbWidth() / 2, sliderBounds.y(), getThumbX() + getThumbWidth() / 2, sliderBounds.yLimit(), -1);
-
-        if (isHoveredSliderBounds(mouseX, mouseY)) {
-            graphics.requestCursor(isAvailable() ? com.mojang.blaze3d.platform.cursor.CursorTypes.RESIZE_EW : com.mojang.blaze3d.platform.cursor.CursorTypes.NOT_ALLOWED);
-        }
     }
 
     @Override
-    protected void extractValueText(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        graphics.pose().pushMatrix();
+    protected void drawValueText(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        graphics.pose().pushPose();
         if (isHovered())
-            graphics.pose().translate(-(sliderBounds.width() + 6 + getThumbWidth() / 2f), 0);
-        super.extractValueText(graphics, mouseX, mouseY, a);
-        graphics.pose().popMatrix();
+            graphics.pose().translate(-(sliderBounds.width() + 6 + getThumbWidth() / 2f), 0, 0);
+        super.drawValueText(graphics, mouseX, mouseY, delta);
+        graphics.pose().popPose();
     }
 
     @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (!isAvailable() || event.button() != InputConstants.MOUSE_BUTTON_LEFT || !isHoveredSliderBounds(event.x(), event.y()))
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!isAvailable() || button != 0 || !sliderBounds.isPointInside((int) mouseX, (int) mouseY))
             return false;
 
         mouseDown = true;
 
-        setValueFromMouse(event.x());
+        setValueFromMouse(mouseX);
         return true;
     }
 
-    private boolean isHoveredSliderBounds(double mouseX, double mouseY) {
-        return sliderBounds.isPointInside((int) mouseX, (int) mouseY);
-    }
-
     @Override
-    public boolean mouseDragged(@NonNull MouseButtonEvent event, double dx, double dy) {
-        if (!isAvailable() || event.button() != InputConstants.MOUSE_BUTTON_LEFT || !mouseDown)
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (!isAvailable() || button != 0 || !mouseDown)
             return false;
 
-        setValueFromMouse(event.x());
+        setValueFromMouse(mouseX);
         return true;
     }
 
@@ -91,8 +80,8 @@ public class SliderControllerElement extends ControllerWidget<ISliderController<
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
-        if (!isAvailable() || (!isMouseOver(mouseX, mouseY)) || (!KeyUtils.hasShiftDown() && !KeyUtils.hasControlDown()))
+    public boolean mouseScrolled(double mouseX, double mouseY, /*? if >1.20.1 {*/ double horizontal, /*?}*/ double vertical) {
+        if (!isAvailable() || (!isMouseOver(mouseX, mouseY)) || (!Screen.hasShiftDown() && !Screen.hasControlDown()))
             return false;
 
         incrementValue(vertical);
@@ -100,20 +89,20 @@ public class SliderControllerElement extends ControllerWidget<ISliderController<
     }
 
     @Override
-    public boolean mouseReleased(@NonNull MouseButtonEvent event) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (isAvailable() && mouseDown)
             playDownSound();
         mouseDown = false;
 
-        return super.mouseReleased(event);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean keyPressed(@NonNull KeyEvent event) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!focused)
             return false;
 
-        switch (event.key()) {
+        switch (keyCode) {
             case InputConstants.KEY_LEFT -> incrementValue(-1);
             case InputConstants.KEY_RIGHT -> incrementValue(1);
             default -> {
