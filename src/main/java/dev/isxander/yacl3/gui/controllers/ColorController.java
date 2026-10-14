@@ -1,7 +1,6 @@
 package dev.isxander.yacl3.gui.controllers;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.api.utils.MutableDimension;
@@ -9,16 +8,12 @@ import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.string.IStringController;
 import dev.isxander.yacl3.gui.controllers.string.StringControllerElement;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
 import dev.isxander.yacl3.platform.YACLConfig;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.util.ARGB;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 import java.util.List;
@@ -26,7 +21,10 @@ import java.util.List;
 /**
  * A color controller that uses a hex color field as input.
  */
-public record ColorController(Option<Color> option, boolean allowAlpha) implements IStringController<Color> {
+public class ColorController implements IStringController<Color> {
+    private final Option<Color> option;
+    private final boolean allowAlpha;
+
     /**
      * Constructs a color controller with {@link ColorController#allowAlpha()} defaulting to false
      *
@@ -39,10 +37,12 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
     /**
      * Constructs a color controller
      *
-     * @param option     bound option
+     * @param option bound option
      * @param allowAlpha allows the color input to accept alpha values
      */
-    public ColorController {
+    public ColorController(Option<Color> option, boolean allowAlpha) {
+        this.option = option;
+        this.allowAlpha = allowAlpha;
     }
 
     /**
@@ -51,6 +51,10 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
     @Override
     public Option<Color> option() {
         return option;
+    }
+
+    public boolean allowAlpha() {
+        return allowAlpha;
     }
 
     @Override
@@ -114,40 +118,28 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
         }
 
         @Override
-        protected void extractValueText(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        protected void drawValueText(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             hovered = isMouseOver(mouseX, mouseY);
 
             if (isHovered()) {
                 colorPreviewDim.move(-inputFieldBounds.width() - 8, -2);
                 colorPreviewDim.expand(4, 4);
                 previewOutlineFadeTicks++;
-                super.extractValueText(graphics, mouseX, mouseY, a);
+                super.drawValueText(graphics, mouseX, mouseY, delta);
             }
 
             int previewColor = colorController.option().pendingValue().getRGB();
-            if (ARGB.alpha(previewColor) < 255) {
-                int x = colorPreviewDim.x();
-                int y = colorPreviewDim.y();
-                int width = colorPreviewDim.width();
-                graphics.blitSprite(
-                        RenderPipelines.GUI_TEXTURED,
-                        ColorPickerWidget.TRANSPARENT_SPRITE,
-                        x, y,
-                        width, colorPreviewDim.height()
-                );
+            if (GuiUtils.extractAlpha(previewColor) < 255) {
+                GuiUtils.blitSprite(graphics, ColorPickerWidget.TRANSPARENT_SPRITE, colorPreviewDim.x(), colorPreviewDim.y(), colorPreviewDim.width(), colorPreviewDim.height());
             }
             graphics.fill(colorPreviewDim.x(), colorPreviewDim.y(), colorPreviewDim.xLimit(), colorPreviewDim.yLimit(), previewColor);
             boolean isMouseOverColorPreview = isMouseOverColorPreview(mouseX, mouseY);
-            graphics.outline(
-                    colorPreviewDim.x(),
-                    colorPreviewDim.y(),
-                    colorPreviewDim.width(),
-                    colorPreviewDim.height(),
-                    getPreviewOutlineColor(hoveredOverColorPreview || isMouseOverColorPreview).getRGB()
-            );
+            Color outlineColor = getPreviewOutlineColor(hoveredOverColorPreview || isMouseOverColorPreview);
+            drawOutline(graphics, colorPreviewDim.x(), colorPreviewDim.y(), colorPreviewDim.xLimit(), colorPreviewDim.yLimit(), 1, outlineColor.getRGB());
 
             if (isMouseOverColorPreview) {
-                graphics.requestCursor(isAvailable() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+                //? if >=1.21.9
+                //graphics.requestCursor(isAvailable() ? com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND : com.mojang.blaze3d.platform.cursor.CursorTypes.NOT_ALLOWED);
             }
         }
 
@@ -225,17 +217,17 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
             if (colorPickerWidget != null) {
                 colorPickerWidget.setDimension(colorPickerWidget.getDimension().withY(this.getDimension().y()));
                 //checks if the color controller is being partially rendered offscreen
-                if (this.getDimension().y() < screen.tabArea.top() || this.getDimension().yLimit() > screen.tabArea.bottom()) {
+                if(this.getDimension().y() < screen.tabArea.top() || this.getDimension().yLimit() > screen.tabArea.bottom()) {
                     removeColorPicker();
                 }
             }
         }
 
         @Override
-        public boolean keyPressed(@NonNull KeyEvent event) {
+        public boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
             int prevSelectionLength = selectionLength;
             selectionLength = 0;
-            if (super.keyPressed(event)) {
+            if (super.onKeyPressed(keyCode, scanCode, modifiers)) {
                 caretPos = Math.max(1, caretPos);
                 setSelectionLength();
                 return true;
@@ -246,12 +238,12 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
         }
 
         @Override
-        public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
+        public boolean onMouseClicked(double mouseX, double mouseY, int button) {
             // Detects if the user has clicked the color preview
-            if (isMouseOverColorPreview(event.x(), event.y())) {
+            if (isMouseOverColorPreview(mouseX, mouseY)) {
                 playDownSound();
                 createOrRemoveColorPicker();
-                if (YACLConfig.HANDLER.instance().showColorPickerIndicator) {
+                if(YACLConfig.HANDLER.instance().showColorPickerIndicator) {
                     YACLConfig.HANDLER.instance().showColorPickerIndicator = false;
                     YACLConfig.HANDLER.save();
                 }
@@ -267,7 +259,7 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
 
         public void createOrRemoveColorPicker() {
             colorPickerVisible = !colorPickerVisible;
-            if (colorPickerVisible) {
+            if(colorPickerVisible) {
                 colorPickerWidget = createColorPicker();
                 screen.addPopupControllerWidget(colorPickerWidget);
             } else {
@@ -301,7 +293,7 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
                 previewOutlineFadeTicks = 0;
                 return highlightedColor;
             } else if (YACLConfig.HANDLER.instance().showColorPickerIndicator) {
-                if (previewOutlineFadeTicks <= fadeInTicks) {
+                if(previewOutlineFadeTicks <= fadeInTicks) {
                     //fade to white
                     return getFadedColor(outlineColor, highlightedColor, previewOutlineFadeTicks, fadeInTicks);
                 } else if (previewOutlineFadeTicks <= fadeOutTicks) {
@@ -309,7 +301,7 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
                     return getFadedColor(highlightedColor, outlineColor, previewOutlineFadeTicks - fadeInTicks, fadeOutTicks - fadeInTicks);
                 }
 
-                if (previewOutlineFadeTicks >= fadeInTicks + fadeOutTicks + 10) {
+                if(previewOutlineFadeTicks >= fadeInTicks + fadeOutTicks + 10) {
                     //reset fade
                     previewOutlineFadeTicks = 0;
                 }
@@ -336,7 +328,7 @@ public record ColorController(Option<Color> option, boolean allowAlpha) implemen
             Color pendingValue = colorController.option().pendingValue();
             float[] HSL = Color.RGBtoHSB(pendingValue.getRed(), pendingValue.getGreen(), pendingValue.getBlue(), null);
             Color highlightedColor = new Color(0xFFFFFFFF);
-            if (HSL[1] < 0.1f && HSL[2] > 0.9f) {
+            if(HSL[1] < 0.1f && HSL[2] > 0.9f) {
                 highlightedColor = new Color(0xFFC6C6C6);
             }
             return highlightedColor;

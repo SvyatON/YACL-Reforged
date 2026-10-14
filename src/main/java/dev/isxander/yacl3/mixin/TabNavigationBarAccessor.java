@@ -11,13 +11,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(TabNavigationBar.class)
 public interface TabNavigationBarAccessor {
-    //? if <26.2 {
-    /*@Accessor("layout")
+    @Accessor("layout")
     LinearLayout yacl$getLayout();
 
     @Accessor("width")
     int yacl$getWidth();
-    *///?}
 
     @Accessor("tabManager")
     TabManager yacl$getTabManager();

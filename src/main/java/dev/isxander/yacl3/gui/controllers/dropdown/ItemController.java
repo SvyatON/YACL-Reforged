@@ -7,7 +7,7 @@ import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.utils.ItemRegistryHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 /**
@@ -51,10 +51,10 @@ public class ItemController extends AbstractDropdownController<Item> {
 
 	@Override
 	protected String getValidValue(String value, int offset) {
-		return ItemRegistryHelper.getMatchingItemIdentifiers(value)
+		return ItemRegistryHelper.getMatchingItemResourceLocations(value)
 				.skip(offset)
 				.findFirst()
-				.map(Identifier::toString)
+				.map(ResourceLocation::toString)
 				.orElseGet(this::getString);
 	}
 

@@ -1,6 +1,7 @@
 package dev.isxander.yacl3.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.api.utils.MutableDimension;
@@ -13,31 +14,29 @@ import dev.isxander.yacl3.gui.utils.GuiUtils;
 import dev.isxander.yacl3.impl.utils.YACLConstants;
 import dev.isxander.yacl3.platform.YACLPlatform;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineLabel;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import net.minecraft.client.input.MouseButtonEvent;
+//? if >=1.21.9
+//import net.minecraft.client.input.MouseButtonEvent;
 
 public class YACLScreen extends Screen {
     public final YetAnotherConfigLib config;
@@ -56,11 +55,6 @@ public class YACLScreen extends Screen {
 
     public ControllerPopupWidget<?> currentPopupController = null;
     public boolean popupControllerVisible = false;
-
-    /**
-     * The tab where the user started searching
-     */
-    private @Nullable CategoryTab preferredTab = null;
 
     public YACLScreen(YetAnotherConfigLib config, Screen parent) {
         super(config.title());
@@ -95,11 +89,7 @@ public class YACLScreen extends Screen {
                     return new CategoryTab(this, category, tabArea);
                 }).toList());
         tabNavigationBar.selectTab(currentTab, false);
-        //? if >=26.2 {
-        tabNavigationBar.arrangeElements(tabArea.width());
-        //?} else {
-        /*tabNavigationBar.arrangeElements();
-        *///?}
+        tabNavigationBar.arrangeElements();
         tabManager.setTabArea(tabArea);
         addRenderableWidget(tabNavigationBar);
 
@@ -121,12 +111,12 @@ public class YACLScreen extends Screen {
             optionListWidget = categoryTab.optionList.getType();
         }
         if(optionListWidget != null) {
-            GuiUtils.setScreen(new PopupControllerScreen(this, controllerPopupWidget));
+            this.minecraft.setScreen(new PopupControllerScreen(this, controllerPopupWidget));
         }
     }
 
     public void clearPopupControllerWidget() {
-        if (GuiUtils.getCurrentScreen() instanceof PopupControllerScreen popupControllerScreen) {
+        if(Minecraft.getInstance().screen instanceof PopupControllerScreen popupControllerScreen) {
             popupControllerScreen.onClose();
         }
         popupControllerVisible = false;
@@ -134,8 +124,8 @@ public class YACLScreen extends Screen {
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
 
         if (tabManager.getCurrentTab() instanceof TabExt tab) {
             tab.renderBackground(guiGraphics);
@@ -207,7 +197,8 @@ public class YACLScreen extends Screen {
         }
     }
 
-    @Override
+    //? if >=1.21.9 {
+    /*@Override
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
         if (super.mouseClicked(mouseButtonEvent, bl)) {
             this.setDragging(true);
@@ -215,14 +206,34 @@ public class YACLScreen extends Screen {
         }
         return false;
     }
-
+    *///?} else {
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            this.setDragging(true);
+            return true;
+        }
+        return false;
+    }
+    //?}
+
+    //? if >=1.21.9 {
+    /*@Override
     public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double d, double e) {
         return this.getFocused() != null
                 && this.isDragging()
                 && (mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT || mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_RIGHT)
                 && this.getFocused().mouseDragged(mouseButtonEvent, d, e);
     }
+    *///?} else {
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        return this.getFocused() != null
+                && this.isDragging()
+                && (button == InputConstants.MOUSE_BUTTON_LEFT || button == InputConstants.MOUSE_BUTTON_RIGHT)
+                && this.getFocused().mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+    //?}
 
     public void setSaveButtonMessage(Component message, Component tooltip) {
         saveButtonMessage = message;
@@ -258,10 +269,10 @@ public class YACLScreen extends Screen {
 
     @Override
     public void onClose() {
-        GuiUtils.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 
-    public static void renderMultilineTooltip(GuiGraphicsExtractor graphics, Font font, MultiLineLabel text, int centerX, int yAbove, int yBelow, int screenWidth, int screenHeight) {
+    public static void renderMultilineTooltip(GuiGraphics graphics, Font font, MultiLineLabel text, int centerX, int yAbove, int yBelow, int screenWidth, int screenHeight) {
         if (text.getLineCount() > 0) {
             int maxWidth = text.getWidth();
             int lineHeight = font.lineHeight + 1;
@@ -280,61 +291,34 @@ public class YACLScreen extends Screen {
             int drawX = x + 12;
             int drawY = y - 12;
 
-            graphics.pose().pushMatrix();
-            TooltipRenderUtil.extractTooltipBackground(
+            GuiUtils.pushPose(graphics);
+            TooltipRenderUtil.renderTooltipBackground(
                     graphics,
                     drawX,
                     drawY,
                     maxWidth,
                     height
-                    ,null
+                    //? if <1.21.6
+                    ,400
+                    //? if >=1.21.2
+                    //,null
             );
+            GuiUtils.translateZ(graphics, 400);
 
-            text.visitLines(net.minecraft.client.gui.TextAlignment.LEFT, drawX, drawY, lineHeight, graphics.textRenderer());
+            //? if >=1.21.11 {
+            /*text.visitLines(net.minecraft.client.gui.TextAlignment.LEFT, drawX, drawY, lineHeight, graphics.textRenderer());
+            *///?} elif >=1.21.9 {
+            /*text.render(graphics, MultiLineLabel.Align.LEFT, drawX, drawY, lineHeight, false, -1);
+            *///?} else {
+            text.renderLeftAligned(graphics, drawX, drawY, lineHeight, -1);
+            //?}
 
-            graphics.pose().popMatrix();
+            GuiUtils.popPose(graphics);
         }
-    }
-
-    public void updateGlobalSearch(String search) {
-        Tab nextTabWithSearch = null;
-        if (preferredTab != null) {
-            preferredTab.optionList.getType().updateSearchQuery(search);
-            if (preferredTab.hasSearch()) nextTabWithSearch = preferredTab;
-        }
-        Tab currentTab = tabNavigationBar.getTabManager().getCurrentTab();
-        int cursorPos = currentTab instanceof CategoryTab categoryTab ? categoryTab.searchField.getCursorPosition() : -1;
-
-        for (int i = 0; i < tabNavigationBar.getTabs().size(); i++) {
-            Tab tab = tabNavigationBar.getTabs().get(i);
-            if (tab == preferredTab) continue;
-            if (tab instanceof CategoryTab categoryTab) {
-                categoryTab.optionList.getType().updateSearchQuery(search);
-                categoryTab.searchField.setValueDoNotUpdate(search);
-                if (cursorPos != -1) categoryTab.searchField.setCursorPosition(cursorPos);
-                if (nextTabWithSearch == null && categoryTab.hasSearch()) {
-                    nextTabWithSearch = categoryTab;
-                }
-            }
-        }
-        // switch if the next tab is the preferred one or switch if the current tab does not have the search
-        if (nextTabWithSearch != null && nextTabWithSearch != currentTab && (nextTabWithSearch == preferredTab || !(currentTab instanceof CategoryTab categoryTab && categoryTab.hasSearch()))) {
-            tabManager.setCurrentTab(nextTabWithSearch, false);
-            if (nextTabWithSearch instanceof CategoryTab newTab) {
-                setFocused(newTab.searchField);
-            }
-        }
-        tabNavigationBar.updateTabNames();
-    }
-
-    @Override
-    public void setFocused(@Nullable GuiEventListener focused) {
-        super.setFocused(focused);
-        if (focused != null && !(focused instanceof SearchFieldWidget)) preferredTab = null;
     }
 
     public static class CategoryTab implements TabExt {
-        private static final Identifier DARKER_BG = YACLPlatform.mcRl("textures/gui/menu_list_background.png");
+        private static final ResourceLocation DARKER_BG = YACLPlatform.mcRl("textures/gui/menu_list_background.png");
 
         private final YACLScreen screen;
         private final ConfigCategory category;
@@ -387,11 +371,7 @@ public class YACLScreen extends Screen {
                     paddedWidth - 2, 18,
                     Component.translatable("gui.recipebook.search_hint"),
                     Component.translatable("gui.recipebook.search_hint"),
-                    s -> {
-                        if (screen.preferredTab == null) screen.preferredTab = this;
-                        screen.updateGlobalSearch(s);
-
-                    }
+                    searchQuery -> optionList.getType().updateSearchQuery(searchQuery)
             );
 
             this.optionList = YACLSelectionList.asWidget(
@@ -413,17 +393,9 @@ public class YACLScreen extends Screen {
             updateButtons();
         }
 
-        public boolean hasSearch() {
-            return optionList.getType().children().stream().anyMatch(o -> o.searchQueryMatches);
-        }
-
         @Override
         public Component getTabTitle() {
-            MutableComponent copy = category.name().copy();
-            if (!hasSearch()) {
-                copy.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.STRIKETHROUGH);
-            }
-            return copy;
+            return category.name();
         }
 
         @Override
@@ -437,42 +409,27 @@ public class YACLScreen extends Screen {
         }
 
         @Override
-        public void renderBackground(GuiGraphicsExtractor graphics) {
+        public void renderBackground(GuiGraphics graphics) {
             // right pane darker bg
-            graphics.blit(
-                    RenderPipelines.GUI_TEXTURED,
-                    DARKER_BG,
-                    rightPaneDim.left(), rightPaneDim.top(),
-                    (float) (rightPaneDim.right() + 2), (float) (rightPaneDim.bottom() + 2),
-                    rightPaneDim.width() + 2, rightPaneDim.height() + 2,
-                    32, 32
-            );
+            // 1.21.1 did not use RenderType/RenderPipeline in blit so we need to enable blending manually
+            //? if <1.21.2
+            RenderSystem.enableBlend();
+            GuiUtils.blitGuiTex(graphics, DARKER_BG, rightPaneDim.left(), rightPaneDim.top(), rightPaneDim.right() + 2, rightPaneDim.bottom() + 2, rightPaneDim.width() + 2, rightPaneDim.height() + 2, 32, 32);
+            //? if <1.21.2
+            RenderSystem.disableBlend();
 
             // top separator for right pane
-            graphics.pose().pushMatrix();
-            graphics.blit(
-                    RenderPipelines.GUI_TEXTURED,
-                    CreateWorldScreen.HEADER_SEPARATOR,
-                    rightPaneDim.left() - 1, rightPaneDim.top() - 2,
-                    0.0F, 0.0F,
-                    rightPaneDim.width() + 1, 2,
-                    32, 2
-            );
-            graphics.pose().popMatrix();
+            GuiUtils.pushPose(graphics);
+            GuiUtils.translateZ(graphics, 10);
+            GuiUtils.blitGuiTex(graphics, CreateWorldScreen.HEADER_SEPARATOR, rightPaneDim.left() - 1, rightPaneDim.top() - 2, 0.0F, 0.0F, rightPaneDim.width() + 1, 2, 32, 2);
+            GuiUtils.popPose(graphics);
 
             // left separator for right pane
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(rightPaneDim.left(), rightPaneDim.top() - 1);
-            graphics.pose().rotate((float) Math.toRadians(90));
-            graphics.blit(
-                    RenderPipelines.GUI_TEXTURED,
-                    CreateWorldScreen.FOOTER_SEPARATOR,
-                    0, 0,
-                    0f, 0f,
-                    rightPaneDim.height() + 1, 2,
-                    32, 2
-            );
-            graphics.pose().popMatrix();
+            GuiUtils.pushPose(graphics);
+            GuiUtils.translate2D(graphics, rightPaneDim.left(), rightPaneDim.top() - 1);
+            GuiUtils.rotate2D(graphics, 90);
+            GuiUtils.blitGuiTex(graphics, CreateWorldScreen.FOOTER_SEPARATOR, 0, 0, 0f, 0f, rightPaneDim.height() + 1, 2, 32, 2);
+            GuiUtils.popPose(graphics);
         }
 
         @Override
@@ -529,7 +486,7 @@ public class YACLScreen extends Screen {
 
         @Override
         public void doLayout(ScreenRectangle screenRectangle) {
-            GuiUtils.setScreen(category.screen().apply(screen.minecraft, screen));
+            screen.minecraft.setScreen(category.screen().apply(screen.minecraft, screen));
         }
 
         @Override
