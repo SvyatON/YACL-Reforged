@@ -448,8 +448,8 @@ public class StringControllerElement extends ControllerWidget<IStringController<
 
     private void updateTextInputFocus(boolean focused) {
         //? if >=26.3 {
-        Minecraft.getInstance().onTextInputFocusChange(this, focused);
-        //?}
+        /*Minecraft.getInstance().onTextInputFocusChange(this, focused);
+        *///?}
     }
 
     @Override
