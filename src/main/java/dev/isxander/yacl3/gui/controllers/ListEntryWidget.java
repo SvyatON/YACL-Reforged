@@ -7,16 +7,12 @@ import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.TooltipButtonWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -69,7 +65,7 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         updateButtonStates(); // update every render in case option becomes available/unavailable
 
         removeButton.setY(getDimension().y());
@@ -77,10 +73,10 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
         moveDownButton.setY(getDimension().y());
         entryWidget.setDimension(entryWidget.getDimension().withY(getDimension().y()));
 
-        removeButton.extractRenderState(graphics, mouseX, mouseY, a);
-        moveUpButton.extractRenderState(graphics, mouseX, mouseY, a);
-        moveDownButton.extractRenderState(graphics, mouseX, mouseY, a);
-        entryWidget.extractRenderState(graphics, mouseX, mouseY, a);
+        removeButton.render(graphics, mouseX, mouseY, delta);
+        moveUpButton.render(graphics, mouseX, mouseY, delta);
+        moveDownButton.render(graphics, mouseX, mouseY, delta);
+        entryWidget.render(graphics, mouseX, mouseY, delta);
     }
 
     protected void updateButtonStates() {
@@ -130,33 +126,75 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
         this.focused = focused;
     }
 
+    //? if >=1.21.9 {
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         return ContainerEventHandler.super.mouseClicked(mouseButtonEvent, doubleClick);
     }
+    //?} else {
+    /*@Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return ContainerEventHandler.super.mouseClicked(mouseX, mouseY, button);
+    }
+    *///?}
 
+    //? if >=1.21.9 {
     @Override
-    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent mouseButtonEvent) {
         return ContainerEventHandler.super.mouseReleased(mouseButtonEvent);
     }
+    //?} else {
+    /*@Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return ContainerEventHandler.super.mouseReleased(mouseX, mouseY, button);
+    }
+    *///?}
 
+    //? if >=1.21.9 {
     @Override
-    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent mouseButtonEvent, double dx, double dy) {
         return ContainerEventHandler.super.mouseDragged(mouseButtonEvent, dx, dy);
     }
+    //?} else {
+    /*@Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        return ContainerEventHandler.super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+    *///?}
 
+    //? if >=1.21.9 {
     @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent keyEvent) {
         return ContainerEventHandler.super.keyPressed(keyEvent);
     }
+    //?} else {
+    /*@Override
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        return ContainerEventHandler.super.keyPressed(keycode, scancode, modifiers);
+    }
+    *///?}
 
+    //? if >=1.21.9 {
     @Override
-    public boolean keyReleased(KeyEvent keyEvent) {
+    public boolean keyReleased(net.minecraft.client.input.KeyEvent keyEvent) {
         return ContainerEventHandler.super.keyReleased(keyEvent);
     }
+    //?} else {
+    /*@Override
+    public boolean keyReleased(int keycode, int scancode, int modifiers) {
+        return ContainerEventHandler.super.keyReleased(keycode, scancode, modifiers);
+    }
+    *///?}
 
+    //? if >=1.21.9 {
     @Override
-    public boolean charTyped(CharacterEvent characterEvent) {
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent characterEvent) {
         return ContainerEventHandler.super.charTyped(characterEvent);
     }
+    //?} else {
+    /*@Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return ContainerEventHandler.super.charTyped(codePoint, modifiers);
+    }
+    *///?}
 }

@@ -21,7 +21,7 @@ public class LongFieldImpl extends SimpleOptionFactory<LongField, Long> {
                     key = getTranslationKey(field, "fmt");
                     if (Language.getInstance().has(key))
                         return Component.translatable(key, v);
-                    return Component.literal(String.format(annotation.format(), v));
+                    return Component.literal(Long.toString(v));
                 })
                 .range(annotation.min(), annotation.max());
     }
