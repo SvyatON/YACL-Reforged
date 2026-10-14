@@ -1,38 +1,38 @@
 package dev.isxander.yacl3.gui.controllers;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.isxander.yacl3.api.Controller;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import dev.isxander.yacl3.gui.utils.GuiUtils;
-import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.MultiLineLabel;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
 /**
  * Simply renders some text as a label.
  */
-public record LabelController(Option<Component> option) implements Controller<Component> {
+public class LabelController implements Controller<Component> {
+    private final Option<Component> option;
     /**
      * Constructs a label controller
      *
      * @param option bound option
      */
-    public LabelController {
+    public LabelController(Option<Component> option) {
+        this.option = option;
     }
 
     /**
@@ -69,18 +69,12 @@ public record LabelController(Option<Component> option) implements Controller<Co
         }
 
         @Override
-        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             updateText();
 
             int y = getDimension().y();
-            ActiveTextCollector textCollector = graphics.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.TOOLTIP_AND_CURSOR);
-            Style fallbackStyle = Style.EMPTY.withColor(option().available() ? -1 : 0xFFA0A0A0);
             for (FormattedCharSequence text : wrappedText) {
-                textCollector.accept(
-                        getDimension().x() + getXPadding(),
-                        y + getYPadding(),
-                        GuiUtils.applyFallbackStyle(text, fallbackStyle)
-                );
+                graphics.drawString(textRenderer, text, getDimension().x() + getXPadding(), y + getYPadding(), option().available() ? -1 : 0xFFA0A0A0, true);
                 y += textRenderer.lineHeight;
             }
 
@@ -91,37 +85,70 @@ public record LabelController(Option<Component> option) implements Controller<Co
                 graphics.fill(getDimension().xLimit(), getDimension().y() - 1, getDimension().xLimit() + 1, getDimension().yLimit() + 1, -1);
             }
 
-            graphics.pose().pushMatrix();
+            graphics.pose().pushPose();
+            graphics.pose().translate(0, 0, 100);
             if (isMouseOver(mouseX, mouseY)) {
                 Style style = getStyle(mouseX, mouseY);
+                if (style != null && style.getHoverEvent() != null) {
+                    HoverEvent hoverEvent = style.getHoverEvent();
 
-                if (style != null && style.getClickEvent() != null) {
-                    graphics.requestCursor(CursorTypes.POINTING_HAND);
+                    //? if >=1.21.5 {
+                    /*if (hoverEvent instanceof HoverEvent.ShowItem showItem) {
+                        ItemStack stack = showItem.item();
+                        renderItemStackTooltip(graphics, mouseX, mouseY, stack);
+                    } else if (hoverEvent instanceof HoverEvent.ShowEntity showEntity) {
+                        HoverEvent.EntityTooltipInfo entity = showEntity.entity();
+                        renderEntityTooltip(graphics, mouseX, mouseY, entity);
+                    } else if (hoverEvent instanceof HoverEvent.ShowText showText) {
+                        Component text = showText.value();
+                        renderTextTooltip(graphics, mouseX, mouseY, text);
+                    }
+                    *///?} else {
+                    @Nullable HoverEvent.ItemStackInfo itemStackContent = hoverEvent.getValue(HoverEvent.Action.SHOW_ITEM);
+                    @Nullable HoverEvent.EntityTooltipInfo entityContent = hoverEvent.getValue(HoverEvent.Action.SHOW_ENTITY);
+                    @Nullable Component text = hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT);
+
+                    if (itemStackContent != null) {
+                        ItemStack stack = itemStackContent.getItemStack();
+                        renderItemStackTooltip(graphics, mouseX, mouseY, stack);
+                    } else if (entityContent != null) {
+                        renderEntityTooltip(graphics, mouseX, mouseY, entityContent);
+                    } else if (text != null) {
+                        renderTextTooltip(graphics, mouseX, mouseY, text);
+                    }
+                    //?}
                 }
             }
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
+        }
+
+        private void renderItemStackTooltip(GuiGraphics graphics, int mouseX, int mouseY, ItemStack itemStack) {
+            graphics.renderTooltip(textRenderer, Screen.getTooltipFromItem(client, itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
+        }
+        private void renderEntityTooltip(GuiGraphics graphics, int mouseX, int mouseY, HoverEvent.EntityTooltipInfo entity) {
+            if (this.client.options.advancedItemTooltips) {
+                graphics.renderComponentTooltip(textRenderer, entity.getTooltipLines(), mouseX, mouseY);
+            }
+        }
+        private void renderTextTooltip(GuiGraphics graphics, int mouseX, int mouseY, Component text) {
+            MultiLineLabel multilineText = MultiLineLabel.create(textRenderer, text, getDimension().width());
+            YACLScreen.renderMultilineTooltip(graphics, textRenderer, multilineText, getDimension().centerX(), getDimension().y(), getDimension().yLimit(), screen.width, screen.height);
         }
 
         @Override
-        public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-            if (!isMouseOver(event.x(), event.y()))
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (!isMouseOver(mouseX, mouseY))
                 return false;
 
-            Style style = getStyle((int) event.x(), (int) event.y());
-
-            if (style == null)
-                return false;
-
-            // TODO: reimplement
-            return false;
+            Style style = getStyle((int) mouseX, (int) mouseY);
+            return screen.handleComponentClicked(style);
         }
 
-        @Nullable
         protected Style getStyle(int mouseX, int mouseY) {
             if (!getDimension().isPointInside(mouseX, mouseY))
                 return null;
 
-            int x = mouseX - getDimension().x() - getXPadding();
+            int x = mouseX - getDimension().x();
             int y = mouseY - getDimension().y() - getYPadding();
             int line = y / textRenderer.lineHeight;
 
@@ -129,8 +156,7 @@ public record LabelController(Option<Component> option) implements Controller<Co
             if (y < 0 || y > getDimension().yLimit()) return null;
             if (line < 0 || line >= wrappedText.size()) return null;
 
-            // TODO reimplement
-            return null;
+            return textRenderer.getSplitter().componentStyleAtWidth(wrappedText.get(line), x);
         }
 
         private int getXPadding() {

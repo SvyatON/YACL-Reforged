@@ -4,67 +4,56 @@ import dev.isxander.yacl3.api.Binding;
 import dev.isxander.yacl3.api.StateManager;
 
 public class InstantStateManager<T> implements StateManager<T>, ProvidesBindingForDeprecation<T> {
-
-	private final Binding<T> binding;
-	private final T previousValue;
-	private T pendingValue;
-	private StateListener<T> stateListener;
-	private boolean requiresSave = false;
+    private final Binding<T> binding;
+    private StateListener<T> stateListener;
 
     public InstantStateManager(Binding<T> binding) {
-	    this.binding = binding;
-	    this.previousValue = binding.getValue();
-	    this.pendingValue = binding.getValue();
-	    this.stateListener = StateListener.noop();
+        this.binding = binding;
+        this.stateListener = StateListener.noop();
     }
 
     @Override
     public void set(T value) {
-	    boolean changed = !this.pendingValue.equals(value);
-	    boolean previousValue = this.previousValue.equals(value);
+        boolean changed = !this.get().equals(value);
 
-	    this.binding.setValue(value);
-	    this.pendingValue = value;
+        this.binding.setValue(value);
 
-	    if (previousValue) {
-		    this.requiresSave = false;
-	    }
-	    if (changed && !previousValue) {
-		    this.requiresSave = true;
-	    }
-	    if (changed) {
-		    this.stateListener.onStateChange(this.pendingValue, value);
-	    }
+        if (changed) stateListener.onStateChange(this.get(), value);
     }
 
     @Override
     public T get() {
-	    return this.pendingValue;
+        return this.binding.getValue();
     }
 
     @Override
     public void apply() {
-	    this.requiresSave = false;
+        // no-op, state is always applied
     }
 
     @Override
     public void resetToDefault(ResetAction action) {
-	    this.set(this.binding.defaultValue());
+        this.set(binding.defaultValue());
     }
 
     @Override
     public void sync() {
-	    this.set(this.previousValue);
+        // no-op, state is always synced
     }
 
     @Override
     public boolean isSynced() {
-	    return !this.requiresSave;
+        return true;
+    }
+
+    @Override
+    public boolean isAlwaysSynced() {
+        return true;
     }
 
     @Override
     public boolean isDefault() {
-	    return this.binding.defaultValue().equals(this.pendingValue);
+        return binding.defaultValue().equals(this.get());
     }
 
     @Override
@@ -74,6 +63,6 @@ public class InstantStateManager<T> implements StateManager<T>, ProvidesBindingF
 
     @Override
     public Binding<T> getBinding() {
-        return this.binding;
+        return binding;
     }
 }

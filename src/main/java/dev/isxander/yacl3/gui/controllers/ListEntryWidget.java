@@ -7,16 +7,12 @@ import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.TooltipButtonWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -33,7 +29,7 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
     private boolean dragging;
 
     public ListEntryWidget(YACLScreen screen, ListOptionEntry<?> listOptionEntry, AbstractWidget entryWidget) {
-        super(entryWidget.getDimension().withHeight(Math.min(entryWidget.getDimension().height(), 20) - ((listOptionEntry.parentGroup().indexOf(listOptionEntry) == listOptionEntry.parentGroup().options().size() - 1) ? 0 : 2))); // -2 to remove the padding
+        super(entryWidget.getDimension().withHeight(Math.max(entryWidget.getDimension().height(), 20) - ((listOptionEntry.parentGroup().indexOf(listOptionEntry) == listOptionEntry.parentGroup().options().size() - 1) ? 0 : 2))); // -2 to remove the padding
         this.listOptionEntry = listOptionEntry;
         this.listOption = listOptionEntry.parentGroup();
         this.optionNameString = listOptionEntry.name().getString().toLowerCase();
@@ -69,7 +65,7 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         updateButtonStates(); // update every render in case option becomes available/unavailable
 
         removeButton.setY(getDimension().y());
@@ -77,10 +73,10 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
         moveDownButton.setY(getDimension().y());
         entryWidget.setDimension(entryWidget.getDimension().withY(getDimension().y()));
 
-        removeButton.extractRenderState(graphics, mouseX, mouseY, a);
-        moveUpButton.extractRenderState(graphics, mouseX, mouseY, a);
-        moveDownButton.extractRenderState(graphics, mouseX, mouseY, a);
-        entryWidget.extractRenderState(graphics, mouseX, mouseY, a);
+        removeButton.render(graphics, mouseX, mouseY, delta);
+        moveUpButton.render(graphics, mouseX, mouseY, delta);
+        moveDownButton.render(graphics, mouseX, mouseY, delta);
+        entryWidget.render(graphics, mouseX, mouseY, delta);
     }
 
     protected void updateButtonStates() {
@@ -128,35 +124,5 @@ public class ListEntryWidget extends AbstractWidget implements ContainerEventHan
     @Override
     public void setFocused(@Nullable GuiEventListener focused) {
         this.focused = focused;
-    }
-
-    @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
-        return ContainerEventHandler.super.mouseClicked(mouseButtonEvent, doubleClick);
-    }
-
-    @Override
-    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent) {
-        return ContainerEventHandler.super.mouseReleased(mouseButtonEvent);
-    }
-
-    @Override
-    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double dx, double dy) {
-        return ContainerEventHandler.super.mouseDragged(mouseButtonEvent, dx, dy);
-    }
-
-    @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
-        return ContainerEventHandler.super.keyPressed(keyEvent);
-    }
-
-    @Override
-    public boolean keyReleased(KeyEvent keyEvent) {
-        return ContainerEventHandler.super.keyReleased(keyEvent);
-    }
-
-    @Override
-    public boolean charTyped(CharacterEvent characterEvent) {
-        return ContainerEventHandler.super.charTyped(characterEvent);
     }
 }

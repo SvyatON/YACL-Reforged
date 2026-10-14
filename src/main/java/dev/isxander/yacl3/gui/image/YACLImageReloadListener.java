@@ -2,10 +2,11 @@ package dev.isxander.yacl3.gui.image;
 
 import dev.isxander.yacl3.impl.utils.YACLConstants;
 import dev.isxander.yacl3.platform.YACLPlatform;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -18,22 +19,22 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-public class YACLImageReloadListener implements PreparableReloadListener {
+public class YACLImageReloadListener
+        implements PreparableReloadListener
+        /*? if fabric {*//*,
+        net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener
+        *//*?}*/
+{
     @Override
     public @NotNull CompletableFuture<Void> reload(
-            SharedState sharedState,
-            Executor backgroundExecutor,
             PreparationBarrier preparationBarrier,
-            Executor gameExecutor
-    ) {
-        return this.reload0(sharedState.resourceManager(), backgroundExecutor, preparationBarrier, gameExecutor);
-    }
-
-    private @NotNull CompletableFuture<Void> reload0(
-            ResourceManager resourceManager,
-            Executor backgroundExecutor,
-            PreparationBarrier preparationBarrier,
-            Executor gameExecutor
+            @NotNull ResourceManager resourceManager,
+            //? if <1.21.2 {
+            @NotNull ProfilerFiller preparationsProfiler,
+            @NotNull ProfilerFiller reloadProfiler,
+            //?}
+            @NotNull Executor backgroundExecutor,
+            @NotNull Executor gameExecutor
     ) {
         return prepare(resourceManager, backgroundExecutor)
                 .thenCompose(preparationBarrier::wait)
@@ -44,7 +45,7 @@ public class YACLImageReloadListener implements PreparableReloadListener {
             ResourceManager manager,
             Executor executor
     ) {
-        Map<Identifier, Resource> imageResources = manager.listResources(
+        Map<ResourceLocation, Resource> imageResources = manager.listResources(
                 "textures",
                 location -> ImageRendererManager.PRELOADED_IMAGE_FACTORIES
                         .stream()
@@ -94,12 +95,19 @@ public class YACLImageReloadListener implements PreparableReloadListener {
                 .toArray(CompletableFuture<?>[]::new));
     }
 
-    private record SupplierPreparation(Identifier location, ImageRendererFactory.ImageSupplier supplier) {
+    private record SupplierPreparation(ResourceLocation location, ImageRendererFactory.ImageSupplier supplier) {
     }
 
-    public static Identifier getId() {
+    public ResourceLocation getId() {
         return YACLPlatform.rl("image_reload_listener");
     }
+
+    /*? if fabric {*/
+    /*@Override
+    public ResourceLocation getFabricId() {
+        return this.getId();
+    }
+    *//*?}*/
 
     public static class CompletableFutureCollector<X, T extends CompletableFuture<X>> implements Collector<T, List<T>, CompletableFuture<List<X>>> {
         private CompletableFutureCollector() {

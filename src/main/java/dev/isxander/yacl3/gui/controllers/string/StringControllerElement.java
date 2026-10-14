@@ -6,16 +6,11 @@ import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
 import dev.isxander.yacl3.gui.utils.GuiUtils;
-import dev.isxander.yacl3.gui.utils.KeyUtils;
 import dev.isxander.yacl3.gui.utils.UndoRedoHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.NonNull;
 
 import java.util.function.Consumer;
 
@@ -54,21 +49,21 @@ public class StringControllerElement extends ControllerWidget<IStringController<
     }
 
     @Override
-    protected void extractHoveredControl(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void drawHoveredControl(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 
     }
 
     @Override
-    protected void extractValueText(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void drawValueText(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         Component valueText = getValueText();
         if (!isHovered()) valueText = Component.literal(GuiUtils.shortenString(valueText.getString(), textRenderer, getMaxUnwrapLength(), "...")).setStyle(valueText.getStyle());
 
         int textX = getDimension().xLimit() - textRenderer.width(valueText) + renderOffset - getXPadding();
         graphics.enableScissor(inputFieldBounds.x(), inputFieldBounds.y() - 2, inputFieldBounds.xLimit() + 1, inputFieldBounds.yLimit() + 4);
-        graphics.text(textRenderer, valueText, textX, getTextY(), getValueColor(), true);
+        graphics.drawString(textRenderer, valueText, textX, getTextY(), getValueColor(), true);
 
         if (isHovered()) {
-            ticks += a;
+            ticks += delta;
 
             String text = getValueText().getString();
 
@@ -93,34 +88,23 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                     caretTicks = 0;
                 }
 
-                if ((caretTicks += a) % 20 <= 10)
+                if ((caretTicks += delta) % 20 <= 10)
                     graphics.fill(caretX, inputFieldBounds.y() - 2, caretX + 1, inputFieldBounds.yLimit() - 1, -1);
             }
         }
         graphics.disableScissor();
-
-        if (this.isHoveredInputField(mouseX, mouseY)) {
-            graphics.requestCursor(isAvailable() ? com.mojang.blaze3d.platform.cursor.CursorTypes.IBEAM : com.mojang.blaze3d.platform.cursor.CursorTypes.NOT_ALLOWED);
-        } else if (this.hovered) {
-            graphics.requestCursor(isAvailable() ? com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND : com.mojang.blaze3d.platform.cursor.CursorTypes.NOT_ALLOWED);
-        }
-    }
-
-    private boolean isHoveredInputField(double mouseX, double mouseY) {
-        return inputFieldBounds.isPointInside((int) mouseX, (int) mouseY);
     }
 
     @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (isAvailable() && getDimension().isPointInside((int) event.x(), (int) event.y())) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isAvailable() && getDimension().isPointInside((int) mouseX, (int) mouseY)) {
             inputFieldFocused = true;
-            updateTextInputFocus(true);
 
-            if (!isHoveredInputField(event.x(), event.y())) {
+            if (!inputFieldBounds.isPointInside((int) mouseX, (int) mouseY)) {
                 caretPos = getDefaultCaretPos();
             } else {
                 // gets the appropriate caret position for where you click
-                int textX = (int) event.x() - (inputFieldBounds.xLimit() - textRenderer.width(getValueText()));
+                int textX = (int) mouseX - (inputFieldBounds.xLimit() - textRenderer.width(getValueText()));
                 int pos = -1;
                 int currentWidth = 0;
                 for (char ch : inputField.toCharArray()) {
@@ -155,18 +139,18 @@ public class StringControllerElement extends ControllerWidget<IStringController<
     }
 
     @Override
-    public boolean keyPressed(@NonNull KeyEvent event) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!inputFieldFocused)
             return false;
 
-        switch (event.key()) {
+        switch (keyCode) {
             case InputConstants.KEY_ESCAPE, InputConstants.KEY_RETURN -> {
                 unfocus();
                 return true;
             }
             case InputConstants.KEY_LEFT -> {
-                if (event.hasShiftDown()) {
-                    if (event.hasControlDown()) {
+                if (Screen.hasShiftDown()) {
+                    if (Screen.hasControlDown()) {
                         int spaceChar = findSpaceIndex(true);
                         selectionLength += caretPos - spaceChar;
                         caretPos = spaceChar;
@@ -177,7 +161,7 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                     checkRenderOffset();
                 } else {
                     if (caretPos > 0) {
-                        if (event.hasControlDown()) {
+                        if (Screen.hasControlDown()) {
                             caretPos = findSpaceIndex(true);
                         } else {
                             if (selectionLength != 0) {
@@ -192,8 +176,8 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                 return true;
             }
             case InputConstants.KEY_RIGHT -> {
-                if (event.hasShiftDown()) {
-                    if (event.hasControlDown()) {
+                if (Screen.hasShiftDown()) {
+                    if (Screen.hasControlDown()) {
                         int spaceChar = findSpaceIndex(false);
                         selectionLength -= spaceChar - caretPos;
                         caretPos = spaceChar;
@@ -204,7 +188,7 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                     checkRenderOffset();
                 } else {
                     if (caretPos < inputField.length()) {
-                        if (event.hasControlDown()) {
+                        if (Screen.hasControlDown()) {
                             caretPos = findSpaceIndex(false);
                         } else {
                             if (selectionLength != 0) {
@@ -227,7 +211,7 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                 return true;
             }
             case InputConstants.KEY_END -> {
-                if (event.hasShiftDown()) {
+                if (Screen.hasShiftDown()) {
                     selectionLength -= inputField.length() - caretPos;
                 } else selectionLength = 0;
                 caretPos = inputField.length();
@@ -235,7 +219,7 @@ public class StringControllerElement extends ControllerWidget<IStringController<
                 return true;
             }
             case InputConstants.KEY_HOME -> {
-                if (event.hasShiftDown()) {
+                if (Screen.hasShiftDown()) {
                     selectionLength += caretPos;
                     caretPos = 0;
                 } else {
@@ -261,13 +245,13 @@ public class StringControllerElement extends ControllerWidget<IStringController<
 //            }
         }
 
-        if (event.isPaste()) {
+        if (Screen.isPaste(keyCode)) {
             return doPaste();
-        } else if (event.isCopy()) {
+        } else if (Screen.isCopy(keyCode)) {
             return doCopy();
-        } else if (event.isCut()) {
+        } else if (Screen.isCut(keyCode)) {
             return doCut();
-        } else if (event.isSelectAll()) {
+        } else if (Screen.isSelectAll(keyCode)) {
             return doSelectAll();
         }
 
@@ -325,13 +309,17 @@ public class StringControllerElement extends ControllerWidget<IStringController<
     }
 
     @Override
-    public boolean charTyped(@NonNull CharacterEvent event) {
+    public boolean charTyped(char chr, int modifiers) {
         if (!inputFieldFocused)
             return false;
 
-        write(event.codepointAsString());
-        updateUndoHistory();
-        return true;
+        if (!Screen.hasControlDown()) {
+            write(Character.toString(chr));
+            updateUndoHistory();
+            return true;
+        }
+
+        return false;
     }
 
     protected void doBackspace() {
@@ -434,7 +422,6 @@ public class StringControllerElement extends ControllerWidget<IStringController<
     public void setFocused(boolean focused) {
         super.setFocused(focused);
         inputFieldFocused = focused;
-        updateTextInputFocus(focused);
     }
 
     @Override
@@ -443,13 +430,6 @@ public class StringControllerElement extends ControllerWidget<IStringController<
         inputFieldFocused = false;
         renderOffset = 0;
         if (!instantApply) updateControl();
-        updateTextInputFocus(false);
-    }
-
-    private void updateTextInputFocus(boolean focused) {
-        //? if >=26.3 {
-        Minecraft.getInstance().onTextInputFocusChange(this, focused);
-        //?}
     }
 
     @Override

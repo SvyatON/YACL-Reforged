@@ -1,16 +1,14 @@
 package dev.isxander.yacl3.gui.controllers.dropdown;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.api.utils.MutableDimension;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerPopupWidget;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.NonNull;
 
 public class DropdownWidget<T> extends ControllerPopupWidget<AbstractDropdownController<T>> {
 	public static final int MAX_SHOWN_NUMBER_OF_ITEMS = 7;
@@ -54,29 +52,37 @@ public class DropdownWidget<T> extends ControllerPopupWidget<AbstractDropdownCon
 	}
 
 	@Override
-	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 		if (dropdownLength() == 0) return;
 
+		PoseStack matrices = graphics.pose();
+		matrices.pushPose();
+		matrices.translate(0, 0, 200);
+
 		// Background
-        int x = dropdownDim.x();
-        int y1 = dropdownDim.y();
-        int textureWidth = dropdownDim.width();
-        int textureHeight = dropdownDim.height();
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
-                Screen.MENU_BACKGROUND,
-                x, y1,
-                0.0f, 0.0f,
-                textureWidth, textureHeight,
-                32, 32,
+		//graphics.setColor(0.25f, 0.25f, 0.25f, 1.0f);
+		GuiUtils.blitGuiTexColor(
+                graphics,
+				/*? if >1.20.4 {*/
+				/*Screen.MENU_BACKGROUND,
+				*//*?} else {*/
+				Screen.BACKGROUND_LOCATION,
+				/*?}*/
+				dropdownDim.x(), dropdownDim.y(),
+				0.0f, 0.0f,
+				dropdownDim.width(), dropdownDim.height(),
+				32, 32,
                 0xFF3F3F3F
-        );
-		graphics.outline(dropdownDim.x(), dropdownDim.y(), dropdownDim.width(), dropdownDim.height(), -1);
+		);
+		//graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		graphics.renderOutline(dropdownDim.x(), dropdownDim.y(), dropdownDim.width(), dropdownDim.height(), -1);
 
 		// Highlight the currently selected element
+		//graphics.setColor(0.0f, 0.0f, 0.0f, 0.5f);
 		int y = dropdownDim.y() + 2 + entryHeight() * selectedVisibleIndex();
 		graphics.fill(dropdownDim.x(), y, dropdownDim.xLimit(), y + entryHeight(), 0x7F000000);
-		graphics.outline(dropdownDim.x(), y, dropdownDim.width(), entryHeight(), -1);
+		//graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		graphics.renderOutline(dropdownDim.x(), y, dropdownDim.width(), entryHeight(), -1);
 
 		// Render all visible elements
 		MutableDimension<Integer> entryDimension = Dimension.ofInt(
@@ -86,36 +92,38 @@ public class DropdownWidget<T> extends ControllerPopupWidget<AbstractDropdownCon
 				entryHeight()
 		);
 		for (int i = firstVisibleIndex; i < lastVisibleIndex(); ++i) {
-			dropdownElement.extractDropdownEntry(graphics, entryDimension, i);
+			dropdownElement.renderDropdownEntry(graphics, entryDimension, i);
 			entryDimension.move(0, entryHeight());
+		}
+
+		matrices.popPose();
+	}
+
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		if (isMouseOver(mouseX, mouseY)) {
+			// Closes and cleans up the dropdown
+			dropdownElement.unfocus();
+			return true;
+		} else if (dropdownElement.isMouseOver(mouseX, mouseY)) {
+			return dropdownElement.mouseClicked(mouseX, mouseY, button);
+		} else {
+			close();
+			return false;
 		}
 	}
 
-    @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (isMouseOver(event.x(), event.y())) {
-            // Closes and cleans up the dropdown
-            dropdownElement.unfocus();
-            return true;
-        } else if (dropdownElement.isMouseOver(event.x(), event.y())) {
-            return dropdownElement.mouseClicked(event, doubleClick);
-        } else {
-            close();
-            return false;
-        }
-    }
-
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
+	public boolean mouseScrolled(double mouseX, double mouseY, /*? if >1.20.1 {*/ /*double scrollX, *//*?}*/ double scrollY) {
 		if (isMouseOver(mouseX, mouseY)) {
-			if (vertical < 0) {
+			if (scrollY < 0) {
 				scrollDown();
 			} else {
 				scrollUp();
 			}
 			return true;
 		}
-		return super.mouseScrolled(mouseX, mouseY, horizontal, vertical);
+		return super.mouseScrolled(mouseX, mouseY, /*? if >1.20.1 {*/ /*scrollX, *//*?}*/ scrollY);
 	}
 
     @Override
@@ -131,11 +139,11 @@ public class DropdownWidget<T> extends ControllerPopupWidget<AbstractDropdownCon
 		return dropdownDim.isPointInside((int) mouseX, (int) mouseY);
 	}
 
-    @Override
-    public boolean charTyped(@NonNull CharacterEvent event) {
-        // Done to allow for typing whilst the color picker is visible
-        return dropdownElement.charTyped(event);
-    }
+	@Override
+	public boolean charTyped(char chr, int modifiers) {
+		// Done to allow for typing whilst the color picker is visible
+		return dropdownElement.charTyped(chr, modifiers);
+	}
 
 	public int dropdownLength() {
 		return dropdownElement.matchingValues.size();

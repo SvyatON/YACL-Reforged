@@ -1,25 +1,116 @@
 package dev.isxander.yacl3.gui.utils;
 
-import dev.isxander.yacl3.mixin.GuiAccessor;
-import dev.isxander.yacl3.platform.YACLPlatform;
-import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.isxander.yacl3.debug.DebugProperties;
+import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+//? if <1.21.2 {
+import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.platform.GlStateManager;
+//?}
 
 public class GuiUtils {
-
-    public static final WidgetSprites BUTTON_SPRITES = new WidgetSprites(
-            YACLPlatform.mcRl("widget/button"), // normal
-            YACLPlatform.mcRl("widget/button_disabled"), // disabled & !focused
-            YACLPlatform.mcRl("widget/button_highlighted"), // !disabled & focused
-            YACLPlatform.mcRl("widget/slider_highlighted") // disabled & focused
+    //? if >=1.21.2 {
+    /*public static Function<ResourceLocation, RenderType> GUI_TEXTURED_FILTERED = Util.memoize(
+            location -> RenderType.create(
+                    "yacl:gui_textured_filtered",
+                    //? if <1.21.5 {
+                    DefaultVertexFormat.POSITION_TEX_COLOR,
+                    VertexFormat.Mode.QUADS,
+                    //?}
+                    786432,
+                    //? if >=1.21.5 {
+                    /^net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+                    ^///?}
+                    RenderType.CompositeState.builder()
+                            .setTextureState(new RenderType.TextureStateShard(location, net.minecraft.util.TriState.TRUE, false))
+                            //? if <1.21.5 {
+                            .setShaderState(RenderStateShard.POSITION_TEXTURE_COLOR_SHADER)
+                            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                            .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
+                            //?}
+                            .createCompositeState(false)
+            )
     );
+    *///?}
+
+    public static void drawSpecial(GuiGraphics graphics, Consumer<MultiBufferSource> consumer) {
+        //? if >=1.21.2 {
+        /*graphics.drawSpecial(consumer);
+        *///?} else {
+        MultiBufferSource.BufferSource bufferSource = graphics.bufferSource();
+        consumer.accept(bufferSource);
+        bufferSource.endBatch();
+        //?}
+    }
+
+    public static void blitGuiTex(GuiGraphics graphics, ResourceLocation texture, int x, int y, float u, float v, int textureWidth, int textureHeight, int width, int height) {
+        blitGuiTex(graphics, texture, x, y, u, v, textureWidth, textureHeight, width, height, false);
+    }
+
+    public static void blitGuiTex(GuiGraphics graphics, ResourceLocation texture, int x, int y, float u, float v, int textureWidth, int textureHeight, int width, int height, boolean linearFiltering) {
+        //? if <1.21.2
+        doTextureFiltering();
+
+        graphics.blit(
+                //? if >=1.21.2
+                //linearFiltering ? GUI_TEXTURED_FILTERED : RenderType::guiTextured,
+                texture,
+                x, y,
+                u, v,
+                textureWidth, textureHeight,
+                width, height
+        );
+    }
+
+    public static void blitGuiTexColor(GuiGraphics graphics, ResourceLocation texture, int x, int y, float u, float v, int textureWidth, int textureHeight, int width, int height, int color) {
+        //? if <1.21.2 {
+        float a = (color >> 24 & 255) / 255.0F;
+        float r = (color >> 16 & 255) / 255.0F;
+        float g = (color >> 8 & 255) / 255.0F;
+        float b = (color & 255) / 255.0F;
+        graphics.setColor(r, g, b, a);
+        //?}
+        graphics.blit(
+                //? if >=1.21.2
+                //RenderType::guiTextured,
+                texture,
+                x, y,
+                u, v,
+                textureWidth, textureHeight,
+                width, height
+                //? if >=1.21.2
+                //,color
+        );
+        //? if <1.21.2
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    //? if >1.20.1 {
+    /*public static void blitSprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
+        graphics.blitSprite(
+                //? if >=1.21.2
+                //RenderType::guiTextured,
+                sprite,
+                x, y,
+                width, height
+        );
+    }
+    *///?}
 
     public static MutableComponent translatableFallback(String key, Component fallback) {
         if (Language.getInstance().has(key))
@@ -45,35 +136,30 @@ public class GuiUtils {
         return string;
     }
 
-    public static FormattedCharSequence applyFallbackStyle(FormattedCharSequence seq, Style fallback) {
-        return output -> seq.accept((c, s, t) -> output.accept(c, s.applyTo(fallback), t));
+
+    public static void setPixelARGB(NativeImage nativeImage, int x, int y, int argb) {
+        // In 1.21.2+, you set the pixel color in ARGB format, where it internally converts to ABGR.
+        // Before this, you need to directly set the pixel color in ABGR format.
+
+        //? if >=1.21.2 {
+        /*nativeImage.setPixel(x, y, argb);
+        *///?} else {
+        int a = (argb >> 24) & 0xFF;
+        int r = (argb >> 16) & 0xFF;
+        int g = (argb >> 8) & 0xFF;
+        int b = argb & 0xFF;
+        int abgr = (a << 24) | (b << 16) | (g << 8) | r;
+        nativeImage.setPixelRGBA(x, y, abgr); // method name is misleading. It's actually ABGR.
+        //?}
     }
 
-    public static void setScreen(Screen screen, boolean ignoreVanilla) {
-        if (ignoreVanilla) {
-            //? >=26.2 {
-            ((GuiAccessor) Minecraft.getInstance().gui).yacl$setScreen(screen);
-             //? } else {
-            /*Minecraft.getInstance().screen = screen;
-            *///? }
-        } else {
-            //? >=26.2 {
-            Minecraft.getInstance().gui.setScreen(screen);
-             //? } else {
-            /*Minecraft.getInstance().setScreen(screen);
-            *///? }
+    // On new versions this should be done via the render pipeline. Setting global state will not work.
+    //? if <1.21.2 {
+    public static void doTextureFiltering() {
+        if (DebugProperties.IMAGE_FILTERING) {
+            GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_MAG_FILTER, GlConst.GL_LINEAR);
+            GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_MIN_FILTER, GlConst.GL_LINEAR);
         }
     }
-
-    public static void setScreen(Screen screen) {
-        setScreen(screen, false);
-    }
-
-    public static Screen getCurrentScreen() {
-        //? >=26.2 {
-        return Minecraft.getInstance().gui.screen();
-        //? } else {
-        /*return Minecraft.getInstance().screen;
-        *///? }
-    }
+    //?}
 }
