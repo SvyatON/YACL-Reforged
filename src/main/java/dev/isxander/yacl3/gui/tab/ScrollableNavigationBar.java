@@ -10,18 +10,18 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.TabButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 //? if >=26.2
-import net.minecraft.client.gui.components.tabs.MenuTabBar;
+//import net.minecraft.client.gui.components.tabs.MenuTabBar;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
 //? if <26.2
-//import net.minecraft.client.gui.components.tabs.TabNavigationBar;
+import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 public class ScrollableNavigationBar
-        extends /*? if >=26.2 {*/MenuTabBar/*?} else {*//*TabNavigationBar*//*?}*/ {
+        extends /*? if >=26.2 {*//*MenuTabBar*//*?} else {*/TabNavigationBar/*?}*/ {
     private static final int NAVBAR_MARGIN = 28;
 
     private static final Font font = Minecraft.getInstance().font;
@@ -33,14 +33,14 @@ public class ScrollableNavigationBar
 
     public ScrollableNavigationBar(int width, TabManager tabManager, Iterable<? extends Tab> tabs) {
         //? if >=26.2 {
-        var tabsList = ImmutableList.<Tab>copyOf(tabs);
+        /*var tabsList = ImmutableList.<Tab>copyOf(tabs);
         var tabButtonsList = ImmutableList.copyOf(tabsList.stream()
                 .<TabButton>map(tab -> new MenuTabButton(tabManager, tab, 0, 24))
                 .toList());
         super(0, 0, width, 24, tabManager, tabButtonsList, tabsList);
-        //?} else {
-        /*super(width, tabManager, ImmutableList.copyOf(tabs));
-        *///?}
+        *///?} else {
+        super(width, tabManager, ImmutableList.copyOf(tabs));
+        //?}
         this.accessor = (TabNavigationBarAccessor) this;
 
         // add tab tooltips to the tab buttons
@@ -52,9 +52,9 @@ public class ScrollableNavigationBar
     }
 
     @Override
-    public void arrangeElements(/*? if >=26.2 {*/final int pWidth/*?}*/) {
-        int width = /*? if >=26.2 {*/ pWidth; /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
+    public void arrangeElements(/*? if >=26.2 {*//*final int pWidth*//*?}*/) {
+        int width = /*? if >=26.2 {*/ /*pWidth; *//*?} else {*/ accessor.yacl$getWidth(); /*?}*/
+        Layout layout = /*? if >=26.2 {*/ /*this.layout; *//*?} else {*/ accessor.yacl$getLayout(); /*?}*/
 
         ImmutableList<TabButton> tabButtons = accessor.yacl$getTabButtons();
         int noScrollWidth = width - NAVBAR_MARGIN*2;
@@ -90,21 +90,21 @@ public class ScrollableNavigationBar
 
     @Override
     //? if >=26.2 {
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-    //?} else {
-    /*public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-    *///?}
+    /*public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    *///?} else {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    //?}
         graphics.pose().pushMatrix();
         // render option list BELOW the navbar without need to scissor
 
         //? if >=26.2 {
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
-        //?} else {
-        /*super.extractRenderState(graphics, mouseX, mouseY, a);
-        *///?}
+        /*super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
+        *///?} else {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
+        //?}
 
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
-        int width = /*? if >=26.2 {*/ this.getWidth(); /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
+        Layout layout = /*? if >=26.2 {*/ /*this.layout; *//*?} else {*/ accessor.yacl$getLayout(); /*?}*/
+        int width = /*? if >=26.2 {*/ /*this.getWidth(); *//*?} else {*/ accessor.yacl$getWidth(); /*?}*/
         // draw right fade
         if (this.scrollOffset < this.maxScrollOffset - NAVBAR_MARGIN) {
             int right = width;
@@ -149,7 +149,7 @@ public class ScrollableNavigationBar
     }
 
     public void setScrollOffset(int scrollOffset) {
-        Layout layout = /*? if >=26.2 {*/ this.layout; /*?} else {*/ /*accessor.yacl$getLayout(); *//*?}*/
+        Layout layout = /*? if >=26.2 {*/ /*this.layout; *//*?} else {*/ accessor.yacl$getLayout(); /*?}*/
 
         layout.setX(layout.getX() + this.scrollOffset);
         this.scrollOffset = Mth.clamp(scrollOffset, 0, maxScrollOffset);
@@ -169,7 +169,7 @@ public class ScrollableNavigationBar
     }
 
     protected void ensureVisible(TabButton tabButton) {
-        int width = /*? if >=26.2 {*/ this.getWidth(); /*?} else {*/ /*accessor.yacl$getWidth(); *//*?}*/
+        int width = /*? if >=26.2 {*/ /*this.getWidth(); *//*?} else {*/ accessor.yacl$getWidth(); /*?}*/
 
         if (tabButton.getX() < NAVBAR_MARGIN) {
             this.setScrollOffset(this.scrollOffset - (NAVBAR_MARGIN - tabButton.getX()));

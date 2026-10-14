@@ -18,18 +18,18 @@ public interface OptionFlag extends Consumer<Minecraft> {
     /** Reloads chunks upon applying (F3+A) */
     OptionFlag RELOAD_CHUNKS =
             //? if >=26.2 {
-            client -> client.levelExtractor.allChanged();
-            //? } else {
-            /*client -> client.levelRenderer.allChanged();
-            *///?}
+            /*client -> client.levelExtractor.allChanged();
+            *///? } else {
+            client -> client.levelRenderer.allChanged();
+            //?}
 
     @Deprecated
     OptionFlag WORLD_RENDER_UPDATE =
             //? if >=26.2 {
-            RELOAD_CHUNKS;
-            //?} else {
-            /*client -> client.levelRenderer.needsUpdate();
-            *///?}
+            /*RELOAD_CHUNKS;
+            *///?} else {
+            client -> client.levelRenderer.needsUpdate();
+            //?}
 
     OptionFlag ASSET_RELOAD = Minecraft::delayTextureReload;
 }

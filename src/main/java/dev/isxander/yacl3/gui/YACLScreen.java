@@ -96,10 +96,10 @@ public class YACLScreen extends Screen {
                 }).toList());
         tabNavigationBar.selectTab(currentTab, false);
         //? if >=26.2 {
-        tabNavigationBar.arrangeElements(tabArea.width());
-        //?} else {
-        /*tabNavigationBar.arrangeElements();
-        *///?}
+        /*tabNavigationBar.arrangeElements(tabArea.width());
+        *///?} else {
+        tabNavigationBar.arrangeElements();
+        //?}
         tabManager.setTabArea(tabArea);
         addRenderableWidget(tabNavigationBar);
 

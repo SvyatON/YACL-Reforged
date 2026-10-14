@@ -23,9 +23,9 @@ public interface TabExt extends Tab {
     }
 
     //? if >=26.2 {
-    @Override
+    /*@Override
     default @NonNull Layout getLayout() {
         return new FrameLayout();
     }
-    //?}
+    *///?}
 }
