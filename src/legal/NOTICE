@@ -7,7 +7,7 @@ Forge port maintained by SvyatON. No upstream endorsement is claimed.
 Modification notice: SvyatON changed this distribution for Forge compatibility,
 packaging and Reforged branding. Current source snapshot and licensing/packaging
 changes: 2026-10-14. The changed-file inventory and upstream revisions are in
-src/legal/MODIFICATIONS.md and README.md (Source provenance). Earlier upstream notices remain in their files.
+src/legal/MODIFICATIONS.md. Earlier upstream notices remain in their files.
 
 YACL and this modified library are licensed under LGPL-3.0-or-later.
 You may redistribute and modify the library under those terms. There is no
@@ -26,7 +26,7 @@ an accompanying YACL-Reforged-project-sources.zip. Standard *-sources.jar files
 provide preprocessed library sources, but omit the complete build materials.
 Source repository:
 https://github.com/SvyatON/YACL-Reforged
-Installation and rebuilding instructions: README.md (Installation and Building).
+Installation and rebuilding instructions: README.md (Versions and Building).
 The library can be rebuilt and its JAR replaced with an interface-compatible
 modified version; this distribution imposes no additional restriction on that.
 
