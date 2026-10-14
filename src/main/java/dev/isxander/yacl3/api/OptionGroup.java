@@ -63,7 +63,7 @@ public interface OptionGroup {
 
         /**
          * Adds an option to group.
-         * To construct an option, use {@link Option#createBuilder()}
+         * To construct an option, use {@link Option#createBuilder(Class)}
          *
          * @see OptionGroup#options()
          */
@@ -111,25 +111,13 @@ public interface OptionGroup {
         }
 
         /**
-         * Adds multiple options to this group.
+         * Adds multiple options to group.
          * To construct an option, use {@link Option#createBuilder()}
          *
          * @see OptionGroup#options()
          */
         @Override
         Builder options(@NotNull Collection<? extends Option<?>> options);
-
-        /**
-         * Adds multiple options to this group if a condition is met.
-         * To construct an option, use {@link Option#createBuilder()}
-         *
-         * @see OptionGroup#options()
-         */
-        @Override
-        default Builder optionsIf(boolean condition, @NotNull Collection<? extends Option<?>> options) {
-            OptionAddable.super.optionsIf(condition, options);
-            return this;
-        }
 
         /**
          * Dictates if the group should be collapsed by default

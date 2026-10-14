@@ -9,14 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
-    @Inject(
-            //? >=26.2 {
-            method = "exitWorldAndClose",
-            //? } else {
-            /*method = "destroy",
-            *///? }
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;close()V")
-    )
+    @Inject(method = "destroy", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;close()V", shift = At.Shift.BEFORE))
     private void closeImages(CallbackInfo ci) {
         ImageRendererManager.closeAll();
     }

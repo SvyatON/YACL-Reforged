@@ -1,12 +1,12 @@
 package dev.isxander.yacl3.gui;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.NonNull;
 
-public class LowProfileButtonWidget extends Button.Plain {
+public class LowProfileButtonWidget extends Button {
     public LowProfileButtonWidget(int x, int y, int width, int height, Component message, OnPress onPress) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
     }
@@ -17,10 +17,12 @@ public class LowProfileButtonWidget extends Button.Plain {
     }
 
     @Override
-    protected void extractContents(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        if (isHoveredOrFocused() && isActive()) {
-            this.extractDefaultSprite(graphics);
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        if (!isHoveredOrFocused() || !active) {
+            int j = this.active ? 0xFFFFFF : 0xA0A0A0;
+            this.renderString(graphics, Minecraft.getInstance().font, j);
+        } else {
+            super.renderWidget(graphics, mouseX, mouseY, deltaTicks);
         }
-        this.extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
     }
 }

@@ -1,18 +1,19 @@
 package dev.isxander.yacl3.gui.image.impl;
 
+import dev.isxander.yacl3.debug.DebugProperties;
 import dev.isxander.yacl3.gui.image.ImageRenderer;
 import dev.isxander.yacl3.gui.image.ImageRendererFactory;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.Identifier;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 
 public class ResourceTextureImage implements ImageRenderer {
-    private final Identifier location;
+    private final ResourceLocation location;
     private final int width, height;
     private final int textureWidth, textureHeight;
     private final float u, v;
 
-    public ResourceTextureImage(Identifier location, float u, float v, int width, int height, int textureWidth, int textureHeight) {
+    public ResourceTextureImage(ResourceLocation location, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         this.location = location;
         this.width = width;
         this.height = height;
@@ -23,24 +24,25 @@ public class ResourceTextureImage implements ImageRenderer {
     }
 
     @Override
-    public int render(GuiGraphicsExtractor graphics, int x, int y, int renderWidth, float tickDelta) {
+    public int render(GuiGraphics graphics, int x, int y, int renderWidth, float tickDelta) {
         float ratio = renderWidth / (float)this.width;
         int targetHeight = (int) (this.height * ratio);
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(ratio, ratio);
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        graphics.pose().scale(ratio, ratio, 1);
 
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
+        GuiUtils.blitGuiTex(
+                graphics,
                 location,
                 0, 0,
                 this.u, this.v,
                 this.width, this.height,
-                this.textureWidth, this.textureHeight
+                this.textureWidth, this.textureHeight,
+                DebugProperties.IMAGE_FILTERING
         );
 
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
 
         return targetHeight;
     }
@@ -50,7 +52,7 @@ public class ResourceTextureImage implements ImageRenderer {
 
     }
 
-    public static ImageRendererFactory createFactory(Identifier location, float u, float v, int width, int height, int textureWidth, int textureHeight) {
+    public static ImageRendererFactory createFactory(ResourceLocation location, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         return (ImageRendererFactory.OnThread) () -> () -> new ResourceTextureImage(location, u, v, width, height, textureWidth, textureHeight);
     }
 }
