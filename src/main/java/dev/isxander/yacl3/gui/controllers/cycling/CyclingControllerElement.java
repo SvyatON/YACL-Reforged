@@ -1,14 +1,12 @@
 package dev.isxander.yacl3.gui.controllers.cycling;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import org.jspecify.annotations.NonNull;
+import dev.isxander.yacl3.gui.utils.KeyUtils;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 
 public class CyclingControllerElement extends ControllerWidget<ICyclingController<?>> {
 
@@ -17,11 +15,12 @@ public class CyclingControllerElement extends ControllerWidget<ICyclingControlle
     }
 
     @Override
-    protected void extractValueText(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractValueText(graphics, mouseX, mouseY, a);
+    protected void drawValueText(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.drawValueText(graphics, mouseX, mouseY, delta);
 
         if (this.hovered) {
-            graphics.requestCursor(isAvailable() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
+            //? if >=1.21.9
+            graphics.requestCursor(isAvailable() ? com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND : com.mojang.blaze3d.platform.cursor.CursorTypes.NOT_ALLOWED);
         }
     }
 
@@ -36,27 +35,28 @@ public class CyclingControllerElement extends ControllerWidget<ICyclingControlle
     }
 
     @Override
-    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
-        if (!isMouseOver(event.x(), event.y()) || (event.button() != InputConstants.MOUSE_BUTTON_LEFT && event.button() != InputConstants.MOUSE_BUTTON_RIGHT) || !isAvailable())
+    public boolean onMouseClicked(double mouseX, double mouseY, int button) {
+        if (!isMouseOver(mouseX, mouseY) || (button != 0 && button != 1) || !isAvailable())
             return false;
 
         playDownSound();
-        cycleValue(event.button() == InputConstants.MOUSE_BUTTON_RIGHT || event.hasShiftDown() || event.hasControlDown() ? -1 : 1);
+        cycleValue(button == 1 || KeyUtils.hasShiftDown() || KeyUtils.hasControlDown() ? -1 : 1);
+
         return true;
     }
 
     @Override
-    public boolean keyPressed(@NonNull KeyEvent event) {
+    public boolean onKeyPressed(int keyCode, int scanCode, int modifiers) {
         if (!focused)
             return false;
 
-        switch (event.key()) {
+        switch (keyCode) {
             case InputConstants.KEY_LEFT ->
                     cycleValue(-1);
             case InputConstants.KEY_RIGHT ->
                     cycleValue(1);
             case InputConstants.KEY_RETURN, InputConstants.KEY_SPACE, InputConstants.KEY_NUMPADENTER ->
-                    cycleValue(event.hasControlDown() || event.hasShiftDown() ? -1 : 1);
+                    cycleValue(KeyUtils.hasControlDown(modifiers) || KeyUtils.hasShiftDown(modifiers) ? -1 : 1);
             default -> {
                 return false;
             }

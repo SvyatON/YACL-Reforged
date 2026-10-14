@@ -3,13 +3,14 @@ package dev.isxander.yacl3.gui.image.impl;
 import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.twelvemonkeys.imageio.plugins.webp.WebPImageReaderSpi;
+import dev.isxander.yacl3.debug.DebugProperties;
 import dev.isxander.yacl3.gui.image.ImageRendererFactory;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -49,7 +50,7 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
     }
 
     @Override
-    public int render(GuiGraphicsExtractor graphics, int x, int y, int renderWidth, float tickDelta) {
+    public int render(GuiGraphics graphics, int x, int y, int renderWidth, float tickDelta) {
         if (image == null) return 0;
 
         float ratio = renderWidth / (float)frameWidth;
@@ -58,19 +59,20 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
         int currentCol = currentFrame % packCols;
         int currentRow = (int) Math.floor(currentFrame / (double)packCols);
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(ratio, ratio);
+        GuiUtils.pushPose(graphics);
+        GuiUtils.translate2D(graphics, x, y);
+        GuiUtils.scale2D(graphics, ratio, ratio);
 
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
+        GuiUtils.blitGuiTex(
+                graphics,
                 uniqueLocation,
                 0, 0,
-                (float) (frameWidth * currentCol), (float) (frameHeight * currentRow),
+                frameWidth * currentCol, frameHeight * currentRow,
                 frameWidth, frameHeight,
-                this.width, this.height
+                this.width, this.height,
+                DebugProperties.IMAGE_FILTERING
         );
-        graphics.pose().popMatrix();
+        GuiUtils.popPose(graphics);
 
         if (frameCount > 1) {
             double timeMS = Blaze3D.getTime() * 1000;
@@ -248,7 +250,8 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
                     int col = i % cols;
                     int row = (int) Math.floor(i / (double)cols);
 
-                    image.setPixel(
+                    GuiUtils.setPixelARGB(
+                            image,
                             frameWidth * col + w + xOffset,
                             frameHeight * row + h + yOffset,
                             argb

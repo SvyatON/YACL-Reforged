@@ -6,6 +6,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -18,7 +19,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-public class YACLImageReloadListener implements PreparableReloadListener {
+public class YACLImageReloadListener
+        implements PreparableReloadListener
+{
+    //? if >=1.21.9 {
     @Override
     public @NotNull CompletableFuture<Void> reload(
             SharedState sharedState,
@@ -28,6 +32,21 @@ public class YACLImageReloadListener implements PreparableReloadListener {
     ) {
         return this.reload0(sharedState.resourceManager(), backgroundExecutor, preparationBarrier, gameExecutor);
     }
+    //?} else {
+    /*@Override
+    public @NotNull CompletableFuture<Void> reload(
+            PreparationBarrier preparationBarrier,
+            @NotNull ResourceManager resourceManager,
+            //? if <1.21.2 {
+            /^@NotNull ProfilerFiller preparationsProfiler,
+            @NotNull ProfilerFiller reloadProfiler,
+            ^///?}
+            @NotNull Executor backgroundExecutor,
+            @NotNull Executor gameExecutor
+    ) {
+        return reload0(resourceManager, backgroundExecutor, preparationBarrier, gameExecutor);
+    }
+    *///?}
 
     private @NotNull CompletableFuture<Void> reload0(
             ResourceManager resourceManager,
@@ -97,9 +116,10 @@ public class YACLImageReloadListener implements PreparableReloadListener {
     private record SupplierPreparation(Identifier location, ImageRendererFactory.ImageSupplier supplier) {
     }
 
-    public static Identifier getId() {
+    public Identifier getId() {
         return YACLPlatform.rl("image_reload_listener");
     }
+
 
     public static class CompletableFutureCollector<X, T extends CompletableFuture<X>> implements Collector<T, List<T>, CompletableFuture<List<X>>> {
         private CompletableFutureCollector() {

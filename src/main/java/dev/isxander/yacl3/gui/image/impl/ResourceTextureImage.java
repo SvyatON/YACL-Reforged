@@ -1,9 +1,10 @@
 package dev.isxander.yacl3.gui.image.impl;
 
+import dev.isxander.yacl3.debug.DebugProperties;
 import dev.isxander.yacl3.gui.image.ImageRenderer;
 import dev.isxander.yacl3.gui.image.ImageRendererFactory;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import dev.isxander.yacl3.gui.utils.GuiUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.Identifier;
 
 public class ResourceTextureImage implements ImageRenderer {
@@ -23,24 +24,25 @@ public class ResourceTextureImage implements ImageRenderer {
     }
 
     @Override
-    public int render(GuiGraphicsExtractor graphics, int x, int y, int renderWidth, float tickDelta) {
+    public int render(GuiGraphics graphics, int x, int y, int renderWidth, float tickDelta) {
         float ratio = renderWidth / (float)this.width;
         int targetHeight = (int) (this.height * ratio);
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(x, y);
-        graphics.pose().scale(ratio, ratio);
+        GuiUtils.pushPose(graphics);
+        GuiUtils.translate2D(graphics, x, y);
+        GuiUtils.scale2D(graphics, ratio, ratio);
 
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
+        GuiUtils.blitGuiTex(
+                graphics,
                 location,
                 0, 0,
                 this.u, this.v,
                 this.width, this.height,
-                this.textureWidth, this.textureHeight
+                this.textureWidth, this.textureHeight,
+                DebugProperties.IMAGE_FILTERING
         );
 
-        graphics.pose().popMatrix();
+        GuiUtils.popPose(graphics);
 
         return targetHeight;
     }
