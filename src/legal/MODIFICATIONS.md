@@ -94,3 +94,7 @@ The following existing upstream files differ in this snapshot. New files provide
 | `1.20.x/versions/1.20.6-forge/gradle.properties` | SvyatON | 2026-10-14 |
 
 This notice accompanies source and binary distributions in `META-INF/MODIFICATIONS.md`. Required third-party notices remain unchanged and are reproduced under `src/legal/LICENSES/`. Complete project sources include every source family and the build scripts; see the Publishing a release section in `README.md`.
+
+## 2026-11-02
+
+Changed the mod homepage in Forge metadata to https://github.com/SvyatON/YACL-Reforged.
