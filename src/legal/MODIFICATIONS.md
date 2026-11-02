@@ -40,3 +40,7 @@ Upstream revision: `ae66e4c77c13e4e153da5afb9271ed59a359589e` (YACL 3.6.6). The 
 | `versions/1.20.6-forge/gradle.properties` | SvyatON | 2026-10-14 |
 
 See README.md for the exact build command and corresponding source tag. This notice is included in binary and sources JARs under META-INF.
+
+## 2026-11-02
+
+Changed the mod homepage in Forge metadata to https://github.com/SvyatON/YACL-Reforged.
